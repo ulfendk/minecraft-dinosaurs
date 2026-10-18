@@ -13,6 +13,7 @@ import { EGG_ANIMATION, eggBehavior, eggClient, eggLoot, eggModel, eggTexture } 
 import { buildItems, hasEgg } from './items.js';
 import { VEHICLES, vehicleAnimation, vehicleAssets, vehicleBehavior, vehicleClient, vehicleLoot } from './vehicles.js';
 import { emitWorldgen } from './worldgen.js';
+import { DART_ENTITY, GEAR_ICONS, GEAR_ITEMS, dartAssets } from './gear.js';
 
 export interface WorldCtx {
   bp: OutDir;
@@ -69,6 +70,21 @@ export async function emitWorld({ bp, rp, lang, assembled }: WorldCtx) {
     lang.push(`item.${NS}:${it.id}.name=${it.name}`);
   }
 
+  // ---- ranger gear: electric prod, tranquilizer rifle + darts
+  for (const g of GEAR_ITEMS) {
+    bp.json(`items/${g.id}.json`, g.json);
+    rp.png(`textures/items/dino/${g.id}.png`, GEAR_ICONS[g.id]());
+    itemTex[`${NS}_${g.id}`] = { textures: `textures/items/dino/${g.id}` };
+    lang.push(`item.${NS}:${g.id}.name=${g.name}`);
+  }
+  const dart = dartAssets();
+  bp.json('entities/tranq_dart.json', DART_ENTITY);
+  rp.json('entity/dino/tranq_dart.entity.json', dart.client);
+  rp.json('models/entity/dino/tranq_dart.geo.json', dart.geo);
+  rp.json('animations/dino/tranq_dart.animation.json', dart.animation);
+  rp.png('textures/entity/dino/tranq_dart.png', dart.texture);
+  lang.push(`entity.${NS}:tranq_dart.name=Tranquilizer Dart`);
+
   // ---- eggs (entities)
   rp.json('models/entity/dino/egg.geo.json', toGeoJson(eggModel('egg'), 'geometry.dino.egg'));
   rp.json('animations/dino/egg.animation.json', EGG_ANIMATION);
@@ -110,6 +126,9 @@ export async function emitWorld({ bp, rp, lang, assembled }: WorldCtx) {
   r('fence_generator', shaped('fence_generator', ['IRI', 'RCR', 'IRI'], { I: 'minecraft:iron_ingot', R: 'minecraft:redstone_block', C: 'minecraft:copper_block' }, `${NS}:fence_generator`));
   r('safari_truck', shaped('safari_truck', ['  G', 'IHI', 'C C'], { G: 'minecraft:glass_pane', I: 'minecraft:iron_block', H: `${NS}:dino_hide`, C: 'minecraft:coal_block' }, `${NS}:safari_truck`));
   r('tour_car', shaped('tour_car', ['GGG', 'IHI', 'C C'], { G: 'minecraft:glass_pane', I: 'minecraft:iron_block', H: `${NS}:dino_hide`, C: 'minecraft:coal_block' }, `${NS}:tour_car`));
+  r('electric_prod', shaped('electric_prod', ['  C', ' R ', 'I  '], { C: 'minecraft:copper_ingot', R: 'minecraft:redstone_block', I: 'minecraft:iron_ingot' }, `${NS}:electric_prod`));
+  r('tranquilizer_rifle', shaped('tranquilizer_rifle', ['III', ' TS', '  S'], { I: 'minecraft:iron_ingot', T: 'minecraft:tripwire_hook', S: 'minecraft:stick' }, `${NS}:tranquilizer_rifle`));
+  r('tranq_dart', shapeless('tranq_dart', ['minecraft:arrow', 'minecraft:arrow', 'minecraft:arrow', 'minecraft:arrow', 'minecraft:fermented_spider_eye'], `${NS}:tranq_dart`, 4));
   r('gyrosphere', shaped('gyrosphere', ['GGG', 'GIG', 'GGG'], { G: 'minecraft:glass', I: 'minecraft:iron_block' }, `${NS}:gyrosphere`));
 
   // ---- world generation

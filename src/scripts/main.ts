@@ -259,6 +259,92 @@ function zap(e: Entity, dx: number, dz: number) {
   }
 }
 
+// ---------------------------------------------------------------- ranger gear
+
+const SEDATED = 'dino:sedated';
+const isCreature = (e: Entity) => e.matches({ families: ['prehistoric'] });
+
+function wearHeld(player: Player, amount = 1) {
+  if (player.getGameMode() === GameMode.Creative) return;
+  const inv = player.getComponent('minecraft:inventory')?.container;
+  const item = inv?.getItem(player.selectedSlotIndex);
+  const dur = item?.getComponent('minecraft:durability');
+  if (!inv || !item || !dur) return;
+  if (dur.damage + amount >= dur.maxDurability) {
+    inv.setItem(player.selectedSlotIndex, undefined);
+    player.playSound('random.break');
+    return;
+  }
+  dur.damage += amount;
+  inv.setItem(player.selectedSlotIndex, item);
+}
+
+// electric prod: a shock that stuns, slows and pushes the target back
+world.afterEvents.entityHitEntity.subscribe(({ damagingEntity, hitEntity }) => {
+  if (!(damagingEntity instanceof Player) || !hitEntity.isValid) return;
+  if (heldItem(damagingEntity)?.typeId !== `${NS}:electric_prod`) return;
+  const big = hitEntity.matches({ families: [BIG] });
+  try {
+    hitEntity.applyDamage(big ? 3 : 5, { cause: EntityDamageCause.lightning, damagingEntity });
+    hitEntity.addEffect('slowness', big ? 60 : 80, { amplifier: big ? 2 : 6, showParticles: false });
+    hitEntity.addEffect('weakness', 60, { amplifier: 2, showParticles: false });
+    const d = { x: hitEntity.location.x - damagingEntity.location.x, z: hitEntity.location.z - damagingEntity.location.z };
+    const len = Math.hypot(d.x, d.z) || 1;
+    hitEntity.applyKnockback({ x: (d.x / len) * (big ? 0.6 : 1.4), z: (d.z / len) * (big ? 0.6 : 1.4) }, 0.25);
+    const p = hitEntity.location;
+    for (let i = 0; i < 4; i++) hitEntity.dimension.spawnParticle('minecraft:electric_spark_particle', { x: p.x + Math.random() - 0.5, y: p.y + 0.5 + Math.random(), z: p.z + Math.random() - 0.5 });
+    hitEntity.dimension.playSound('random.fizz', p, { volume: 1, pitch: 1.8 });
+  } catch {
+    /* target died */
+  }
+  wearHeld(damagingEntity);
+});
+
+// tranquilizer darts: doses add up; big animals need several darts
+const doseNeeded = (e: Entity) => (e.matches({ families: [BIG] }) ? (e.matches({ families: ['carnivore'] }) ? 4 : 3) : 1);
+
+function sedate(e: Entity, shooter?: Entity) {
+  const now = system.currentTick;
+  const last = (e.getDynamicProperty('dino:dose_tick') as number | undefined) ?? 0;
+  const dose = (now - last > 600 ? 0 : ((e.getDynamicProperty('dino:dose') as number | undefined) ?? 0)) + 1;
+  e.setDynamicProperty('dino:dose', dose);
+  e.setDynamicProperty('dino:dose_tick', now);
+  const need = doseNeeded(e);
+  if (shooter instanceof Player && dose < need) shooter.onScreenDisplay.setActionBar(tr('msg.dose', [String(dose), String(need)]));
+  if (dose < need) {
+    e.addEffect('slowness', 200, { amplifier: Math.min(4, dose), showParticles: false });
+    return;
+  }
+  const seconds = 45;
+  e.addEffect('slowness', seconds * 20, { amplifier: 7, showParticles: false });
+  e.addEffect('weakness', seconds * 20, { amplifier: 9, showParticles: false });
+  try {
+    e.setProperty(SEDATED, true);
+  } catch {
+    /* only our creatures have the property */
+  }
+  e.setDynamicProperty('dino:dose', 0);
+  e.dimension.spawnParticle('minecraft:villager_happy', { x: e.location.x, y: e.location.y + 1, z: e.location.z });
+  if (shooter instanceof Player) shooter.onScreenDisplay.setActionBar(tr('msg.sedated', [{ translate: `entity.${e.typeId}.name` }]));
+  const id = e.id;
+  system.runTimeout(() => {
+    const again = world.getEntity(id);
+    if (!again?.isValid) return;
+    try {
+      again.setProperty(SEDATED, false);
+    } catch {
+      /* ignore */
+    }
+  }, seconds * 20);
+}
+
+world.afterEvents.projectileHitEntity.subscribe((ev) => {
+  if (ev.projectile?.typeId !== `${NS}:tranq_dart`) return;
+  const target = ev.getEntityHit()?.entity;
+  if (!target?.isValid) return;
+  if (isCreature(target) || target.matches({ families: ['mob'] })) sedate(target, ev.source);
+});
+
 // ---------------------------------------------------------------- eggs
 
 world.afterEvents.entitySpawn.subscribe(({ entity }) => {
@@ -364,7 +450,7 @@ function showGuide(player: Player) {
       return textPage(player, tr('guide.plants'), lines(...parts, tr('guide.saplings')));
     }
     if (extra === 1) return textPage(player, tr('guide.taming'), lines(tr('help.taming1'), NL, NL, tr('help.taming2'), NL, NL, tr('help.taming3'), NL, NL, tr('help.taming4')));
-    return textPage(player, tr('guide.park'), lines(tr('help.park1'), NL, NL, tr('help.park2'), NL, NL, tr('help.park3')));
+    return textPage(player, tr('guide.park'), lines(tr('help.park1'), NL, NL, tr('help.park2'), NL, NL, tr('help.park3'), NL, NL, tr('help.park4')));
   });
 }
 

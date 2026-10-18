@@ -297,7 +297,7 @@ export function behaviorEntity(c: CreatureDef, ctx: EntityCtx): J {
   return {
     format_version: FORMAT.entity,
     'minecraft:entity': {
-      description: { identifier: id, spawn_category: swimmer ? 'water_creature' : c.temperament === 'aggressive' ? 'monster' : 'creature', is_spawnable: true, is_summonable: true },
+      description: { identifier: id, properties: { 'dino:sedated': { type: 'bool', default: false, client_sync: true } }, spawn_category: swimmer ? 'water_creature' : c.temperament === 'aggressive' ? 'monster' : 'creature', is_spawnable: true, is_summonable: true },
       component_groups: g,
       components: comp,
       events,

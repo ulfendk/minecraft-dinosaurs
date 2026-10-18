@@ -47,11 +47,17 @@ export const UI: Record<string, Record<Locale, string>> = {
     en_US: '§eVehicles:§r the Safari Truck and the Tour Car seat four, and the Gyrosphere seats two. Place one, climb in and drive with WASD. Hit it to pick it back up.',
     da_DK: '§eKøretøjer:§r Safarivognen og Turbilen har plads til fire, og Gyrosfæren har plads til to. Placér et køretøj, kravl ind og kør med WASD. Slå på det for at samle det op igen.',
   },
+  'help.park4': {
+    en_US: '§eRanger gear:§r the §eElectric Prod§r shocks, slows and pushes back whatever you hit. The §eTranquilizer Rifle§r fires §eTranquilizer Darts§r (with darts in your inventory, hold use and release). One dart knocks out a small animal for 45 seconds, big herbivores need 3 darts and big carnivores 4.',
+    da_DK: '§eUdstyr til opsynsmænd:§r den §eElektriske stav§r giver stød, gør langsom og skubber det, du rammer, tilbage. §eBedøvelsesgeværet§r skyder §eBedøvelsespile§r (hav pile i inventaret, hold brug-knappen og slip). Én pil bedøver et lille dyr i 45 sekunder, store planteædere kræver 3 pile og store kødædere 4.',
+  },
   'msg.welcome': {
     en_US: '§6[Prehistoric Dinosaurs]§r You received a §aDino Field Guide§r. Use it to learn about every creature!',
     da_DK: '§6[Forhistoriske Dinosaurer]§r Du har fået en §aDino-felthåndbog§r. Brug den til at lære om alle dyrene!',
   },
   'msg.hatched': { en_US: '§aYour %s egg hatched!', da_DK: '§aDit %s-æg er klækket!' },
+  'msg.sedated': { en_US: '§b%s is knocked out!', da_DK: '§b%s er bedøvet!' },
+  'msg.dose': { en_US: '§7Sedative: %s/%s', da_DK: '§7Bedøvelse: %s/%s' },
   'msg.fence_on': { en_US: '§eFence power: §aON', da_DK: '§eHegnsstrøm: §aTÆNDT' },
   'msg.fence_off': { en_US: '§eFence power: §cOFF', da_DK: '§eHegnsstrøm: §cSLUKKET' },
 };
@@ -101,6 +107,9 @@ export const DA_GAME_NAMES: Record<string, string> = {
   safari_truck: 'Safarivogn',
   tour_car: 'Turbil',
   gyrosphere: 'Gyrosfære',
+  electric_prod: 'Elektrisk stav',
+  tranquilizer_rifle: 'Bedøvelsesgevær',
+  tranq_dart: 'Bedøvelsespil',
   prehistoric_jungle: 'Forhistorisk jungle',
   ginkgo: 'Ginkgo (tempeltræ)',
   araucaria: 'Abeskræk',

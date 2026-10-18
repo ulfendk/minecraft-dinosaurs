@@ -2,6 +2,7 @@ import { theropod } from '../../model/rigs.js';
 import * as F from '../../creatures/features.js';
 import type { CreatureDef } from '../types.js';
 import { MEAT, HERB, SND } from '../common.js';
+import { sculpt } from './theropods_small.js';
 
 const carn = { diet: 'carnivore' as const, group: 'theropod' as const, habitat: 'land' as const, food: MEAT };
 
@@ -32,12 +33,13 @@ export const theropods: CreatureDef[] = [
         body: { len: 34, w: 15, h: 18, chest: 3 },
         neck: { len: 8, w: 11, h: 13, angle: 26 },
         head: { len: 12, w: 13, h: 14, snoutLen: 10, snoutW: 10, snoutH: 8, jawH: 5, cheek: 2 },
-        tail: { len: 46, segments: 5, lift: 3 },
+        tail: { len: 48, segments: 6, lift: 2, tipW: 3, tipH: 3 },
         arms: { len: 6, w: 2, angle: -45 },
-        legs: { thighW: 9, footLen: 9, footW: 6 },
+        legs: { thighW: 11, shinW: 7, footLen: 10, footW: 7 },
       });
       // heavy brow bosses over the eyes
       F.hornPair(r, { fromTip: 13, len: 2, w: 2, tilt: 70, splay: 0, up: 0 });
+      sculpt(r, { brow: 2, cheeks: true, nasalRidge: true, thighs: 3, flow: true, toes: true, fingers: 2 });
       return r;
     },
   },

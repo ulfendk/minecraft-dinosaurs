@@ -61,7 +61,103 @@ function lacrimal(r: Rig, fromTip: number, len = 3, w = 2, tilt = 20) {
   F.hornPair(r, { fromTip, len, w, tilt, splay: 0, out: 0, mat: 'accent' });
 }
 
+/**
+ * Adds anatomical bulk on top of the theropod rig so the silhouette reads like a
+ * real animal instead of slabs: drumstick thighs, calves, toe claws, deep ribcage,
+ * thick neck base, caudofemoral tail muscle, sloping snout, brow ridges, jaw muscles.
+ */
+function sculpt(r: Rig, s: TheropodSpec, o: { thigh?: number; calf?: number; neckBase?: number; tailBulk?: number; brow?: boolean; jowl?: number; snoutSlope?: boolean; rib?: number } = {}) {
+  const a = r.a;
+  const tw = s.legs.thighW;
+  // legs
+  for (const leg of r.legs) {
+    const [lb, sb, fb] = leg.chain.map((n) => r.mb.get(n));
+    const [sx, hipY] = lb.pivot;
+    const kneeY = sb.pivot[1];
+    const ankleY = fb.pivot[1];
+    const thighLen = hipY - kneeY;
+    const shinLen = kneeY - ankleY;
+    const mw = tw + (o.thigh ?? 2);
+    // drumstick: deep at the hip, tapering into the knee
+    lb.box([sx - mw / 2, kneeY + thighLen * 0.35, -tw * 0.95], [mw, thighLen * 0.65 + 3, tw * 2], 'skin', { tags: ['limb'] });
+    lb.box([sx - (mw - 2) / 2, kneeY + 1, -tw * 0.7], [mw - 2, thighLen * 0.45, tw * 1.45], 'skin', { tags: ['limb'] });
+    // calf muscle on the back of the upper shin
+    const sw = s.legs.shinW ?? Math.max(2, Math.round(tw * 0.7));
+    const cw = sw + (o.calf ?? 1);
+    sb.box([sx - cw / 2, kneeY - shinLen * 0.55, -sw / 2], [cw, shinLen * 0.55 + 1, sw + 2], 'skin', { tags: ['limb'] });
+    // three forward toes with claws
+    const fw = s.legs.footW ?? Math.max(3, sw + 1);
+    const fl = s.legs.footLen ?? 6;
+    const footBox = fb.bone.cubes[1]; // the rig's toe row
+    if (footBox) {
+      const [fx0, fy0, fz0] = footBox.origin;
+      const w3 = Math.max(1, Math.floor(fw / 3));
+      for (let i = 0; i < 3; i++) {
+        const x = fx0 + i * (fw - w3) / 2;
+        const long = i === 1 ? 1 : 0;
+        fb.box([x, fy0, fz0 - 1 - long], [w3, 1, 1 + long], 'claw');
+      }
+      // hallux (dewclaw) on the inside
+      fb.box([sx - 0.5, fy0 + 2, fz0 + fl - 2], [1, 1, 1], 'claw');
+    }
+  }
+  // ribcage: deeper and rounder through the chest, narrowing at the waist
+  const body = r.mb.get('body');
+  const rib = o.rib ?? Math.round(a.bodyH * 0.22);
+  body.box([-(a.bodyW - 1) / 2, a.bodyY - a.bodyH / 2 - rib, a.bodyFront + 3], [a.bodyW - 1, rib + 2, Math.round((a.bodyBack - a.bodyFront) * 0.38)], 'skin');
+  body.box([-(a.bodyW - 3) / 2, a.bodyY - a.bodyH / 2 - rib - 1, a.bodyFront + 5], [a.bodyW - 3, 2, Math.round((a.bodyBack - a.bodyFront) * 0.26)], 'skin');
+  // rounded back: a narrower top layer
+  body.box([-(a.bodyW - 4) / 2, a.bodyTop - 1, a.bodyFront + 4], [a.bodyW - 4, 2, a.bodyBack - a.bodyFront - 8], 'skin');
+  // thick neck base sweeping up from the shoulders
+  const nb = o.neckBase ?? 2;
+  if (nb > 0) {
+    const n0 = r.mb.get(r.neck[0]);
+    const nw = s.neck.w + nb;
+    body.box([-nw / 2, a.bodyY - a.bodyH * 0.2, a.bodyFront - 2], [nw, a.bodyH * 0.7 + 1, 7], 'skin');
+    n0.box([-(nw - 1) / 2, n0.pivot[1] - s.neck.h / 2 - 1, n0.pivot[2] - 4], [nw - 1, s.neck.h + 2, 5], 'skin');
+  }
+  // tail base: caudofemoralis bulge underneath and a thicker root
+  const t0 = r.mb.get(r.tail[0]);
+  const t1z = r.tail[1] ? r.mb.get(r.tail[1]).pivot[2] : a.tailEnd;
+  const c0 = t0.bone.cubes[0];
+  if (c0) {
+    const [x0, y0, z0] = c0.origin;
+    const [w0, h0] = c0.size;
+    const bulk = o.tailBulk ?? 2;
+    t0.box([x0 + 0.5, y0 - bulk, z0], [w0 - 1, bulk + 1, Math.round((t1z - z0) * 0.75)], 'skin');
+    t0.box([x0 - 0.5, y0 + 1, z0], [w0 + 1, h0 - 2, Math.round((t1z - z0) * 0.45)], 'skin');
+  }
+  // head
+  const head = r.mb.get(r.head);
+  const cranH = a.headTop - a.jawY;
+  const sw = s.head.snoutW ?? Math.max(2, s.head.w - 2);
+  const sh = s.head.snoutH ?? Math.max(2, Math.round(cranH * 0.75));
+  if (o.snoutSlope !== false && s.head.snoutLen > 3) {
+    // maxilla step: snout height rises towards the eyes so the profile slopes
+    const stepH = Math.round(sh + (cranH - sh) * 0.55);
+    head.box([-(sw + 1) / 2, a.jawY, a.craniumZ0 - Math.round(s.head.snoutLen * 0.5)], [sw + 1, stepH, Math.round(s.head.snoutLen * 0.5) + 1], 'skin', { tags: ['jawU'] });
+  }
+  if (o.brow !== false) {
+    // bony brow ridges over the eyes
+    head.pair([s.head.w / 2 - 2, a.headTop - 1, a.craniumZ0 + 1], [2, 1, Math.max(3, Math.round(s.head.len * 0.4))], 'skin');
+  }
+  const jowl = o.jowl ?? 1;
+  if (jowl > 0) {
+    // jaw-closing muscles bulging behind the eyes
+    const jl = Math.max(3, Math.round(s.head.len * 0.45));
+    head.pair([s.head.w / 2 - 1, a.jawY - 1, a.headPivot[2] - jl], [jowl + 1, Math.max(2, Math.round(cranH * 0.55)), jl], 'skin');
+  }
+}
+
 const base = (o: Partial<TheropodSpec> & Pick<TheropodSpec, 'hipY' | 'body' | 'neck' | 'head' | 'tail' | 'arms' | 'legs'>) => o as TheropodSpec;
+
+type SculptOpts = Parameters<typeof sculpt>[2];
+/** Builds the rig and sculpts it. */
+function make(id: string, spec: TheropodSpec, o: SculptOpts = {}) {
+  const r = theropod(id, spec);
+  sculpt(r, spec, o);
+  return r;
+}
 
 // ---------------------------------------------------------------------------
 
@@ -73,7 +169,7 @@ export const theropodsLarge: CreatureDef[] = [
     info: 'The longest known predatory dinosaur hunted giant fish in North African rivers, using a sail and a paddle-shaped tail.',
     period: 'Cretaceous',
     lengthM: 14,
-    scale: 1.75,
+    scale: 1.85,
     temperament: 'aggressive',
     health: 170,
     attack: 16,
@@ -85,20 +181,20 @@ export const theropodsLarge: CreatureDef[] = [
     spawn: { biomes: ['prehistoric', 'river', 'swamp'], weight: 2, herd: [1, 1] },
     sounds: SND.huge,
     palette: {
-      back: '#55473a', side: '#806a50', belly: '#d2c09a', accent: '#b4462c', accent2: '#e2a548', eye: '#d9b02a',
+      back: '#4c4033', side: '#76644c', belly: '#d0be98', accent: '#9a4a2e', accent2: '#c8924a', eye: '#d9b02a',
       pattern: { type: 'blotches', colour: '#3d3226', scale: 6, coverage: 0.45 }, teeth: true, spine: true,
     },
     build() {
-      const r = theropod('spinosaurus', base({
-        hipY: 26,
-        body: { len: 40, w: 13, h: 16, chest: 3 },
-        neck: { len: 12, w: 8, h: 9, angle: 30, segments: 2 },
+      const r = make('spinosaurus', base({
+        hipY: 21,
+        body: { len: 46, w: 13, h: 15, chest: 3 },
+        neck: { len: 16, w: 8, h: 9, angle: 34, segments: 2 },
         head: { len: 9, w: 9, h: 9, snoutLen: 7, snoutW: 6, snoutH: 5, jawH: 3, rostrum: { len: 9, w: 5, h: 5 } },
-        tail: { len: 52, segments: 5, lift: 2, h: 10 },
+        tail: { len: 56, segments: 6, lift: 1, h: 10 },
         arms: { len: 11, w: 3, angle: -45, big: true },
-        legs: { thighW: 8, footLen: 8, footW: 6 },
+        legs: { thighW: 8, footLen: 8, footW: 7 },
       }));
-      F.sail(r, { h: 22, from: r.a.bodyFront + 3, to: r.a.bodyBack - 1, arch: true });
+      F.sail(r, { h: 26, from: r.a.bodyFront + 3, to: r.a.bodyBack - 1, arch: true });
       // sail continues low onto the tail base
       F.sail(r, { h: 7, from: r.mb.get('tail0').pivot[2], to: r.mb.get('tail0').pivot[2] + 10, arch: true, bone: 'tail0' });
       thumbClaws(r, 11, 3);
@@ -124,14 +220,14 @@ export const theropodsLarge: CreatureDef[] = [
     spawn: { biomes: ['prehistoric', 'plains', 'savanna'], weight: 2, herd: [1, 2] },
     sounds: SND.bigCarn,
     palette: {
-      back: '#6a3d2a', side: '#9a5d3a', belly: '#dcc39b', accent: '#c23a22', eye: '#e8b33a',
-      pattern: { type: 'stripes', colour: '#4a2a1c', scale: 5, coverage: 0.4 }, teeth: true, spine: true,
+      back: '#5e3e2c', side: '#8c6044', belly: '#d9c39e', accent: '#a8402a', eye: '#e8b33a',
+      pattern: { type: 'stripes', colour: '#3e2a1e', scale: 5, coverage: 0.4 }, teeth: true, spine: true,
     },
     build() {
-      const r = theropod('allosaurus', base({
+      const r = make('allosaurus', base({
         hipY: 28,
         body: { len: 32, w: 12, h: 15, chest: 3 },
-        neck: { len: 10, w: 8, h: 10, angle: 30 },
+        neck: { len: 14, w: 8, h: 10, angle: 32, segments: 2 },
         head: { len: 10, w: 10, h: 11, snoutLen: 10, snoutW: 8, snoutH: 7, jawH: 4 },
         tail: { len: 46, segments: 5, lift: 2 },
         arms: { len: 10, w: 3, angle: -45, big: true },
@@ -161,14 +257,14 @@ export const theropodsLarge: CreatureDef[] = [
     spawn: { biomes: ['prehistoric', 'savanna', 'desert', 'mesa'], weight: 2, herd: [1, 1] },
     sounds: SND.bigCarn,
     palette: {
-      back: '#7a2e24', side: '#a84a32', belly: '#e0c8a0', accent: '#2d1b14', eye: '#f0c040',
-      pattern: { type: 'rosettes', colour: '#4e1a14', scale: 4, coverage: 0.5 }, teeth: true, spine: true,
+      back: '#673a2c', side: '#93583e', belly: '#dcc6a2', accent: '#2d1b14', eye: '#f0c040',
+      pattern: { type: 'rosettes', colour: '#46281e', scale: 4, coverage: 0.5 }, teeth: true, spine: true,
     },
     build() {
-      const r = theropod('carnotaurus', base({
+      const r = make('carnotaurus', base({
         hipY: 31,
         body: { len: 30, w: 12, h: 14, chest: 2 },
-        neck: { len: 10, w: 8, h: 10, angle: 30 },
+        neck: { len: 12, w: 8, h: 10, angle: 32, segments: 2 },
         head: { len: 9, w: 10, h: 12, snoutLen: 5, snoutW: 9, snoutH: 9, jawH: 4 },
         tail: { len: 42, segments: 5, lift: 2 },
         arms: { len: 3, w: 2, angle: -20, hand: 1 },
@@ -202,14 +298,14 @@ export const theropodsLarge: CreatureDef[] = [
     spawn: { biomes: ['prehistoric', 'plains', 'savanna'], weight: 1, herd: [1, 1] },
     sounds: SND.huge,
     palette: {
-      back: '#4b4a52', side: '#77727a', belly: '#d6d0c4', accent: '#7a2f2a', eye: '#e04a2a',
-      pattern: { type: 'stripes', colour: '#2e2d33', scale: 8, coverage: 0.38 }, teeth: true, spine: true,
+      back: '#55504a', side: '#857a6c', belly: '#d8cfbf', accent: '#7a3a2a', eye: '#e04a2a',
+      pattern: { type: 'stripes', colour: '#38332e', scale: 8, coverage: 0.38 }, teeth: true, spine: true,
     },
     build() {
-      const r = theropod('giganotosaurus', base({
+      const r = make('giganotosaurus', base({
         hipY: 31,
         body: { len: 38, w: 15, h: 18, chest: 3 },
-        neck: { len: 9, w: 11, h: 12, angle: 26 },
+        neck: { len: 13, w: 11, h: 12, angle: 28, segments: 2 },
         head: { len: 12, w: 11, h: 13, snoutLen: 13, snoutW: 9, snoutH: 9, jawH: 5 },
         tail: { len: 50, segments: 5, lift: 3 },
         arms: { len: 9, w: 3, angle: -45, big: true },
@@ -241,7 +337,7 @@ export const theropodsLarge: CreatureDef[] = [
       pattern: { type: 'spots', colour: '#2c3a28', scale: 4, coverage: 0.4 }, teeth: true, spine: true,
     },
     build() {
-      const r = theropod('baryonyx', base({
+      const r = make('baryonyx', base({
         hipY: 26,
         body: { len: 32, w: 11, h: 13, chest: 2 },
         neck: { len: 13, w: 7, h: 8, angle: 24, segments: 2 },
@@ -272,13 +368,13 @@ export const theropodsLarge: CreatureDef[] = [
     sounds: SND.bigCarn,
     palette: {
       back: '#2f2f2a', side: '#4f5044', belly: '#c9bf9a', accent: '#d2502a', accent2: '#f0b040', eye: '#f0c030',
-      pattern: { type: 'bands', colour: '#c45a2c', scale: 6, coverage: 0.3, strength: 0.6 }, teeth: true, horn: '#e0b080',
+      pattern: { type: 'bands', colour: '#8e5432', scale: 6, coverage: 0.3, strength: 0.6 }, teeth: true, horn: '#e0b080',
     },
     build() {
-      const r = theropod('ceratosaurus', base({
+      const r = make('ceratosaurus', base({
         hipY: 24,
         body: { len: 28, w: 10, h: 12, chest: 2 },
-        neck: { len: 9, w: 7, h: 8, angle: 30 },
+        neck: { len: 12, w: 7, h: 8, angle: 32, segments: 2 },
         head: { len: 9, w: 8, h: 10, snoutLen: 8, snoutW: 7, snoutH: 7, jawH: 3 },
         tail: { len: 44, segments: 5, lift: 2, h: 10 },
         arms: { len: 7, w: 2, angle: -45 },
@@ -312,7 +408,7 @@ export const theropodsLarge: CreatureDef[] = [
       pattern: { type: 'stripes', colour: '#4a3820', scale: 5, coverage: 0.35 }, teeth: true,
     },
     build() {
-      const r = theropod('suchomimus', base({
+      const r = make('suchomimus', base({
         hipY: 27,
         body: { len: 34, w: 12, h: 14, chest: 2 },
         neck: { len: 13, w: 7, h: 8, angle: 26, segments: 2 },
@@ -346,10 +442,10 @@ export const theropodsLarge: CreatureDef[] = [
       pattern: { type: 'stripes', colour: '#4e3820', scale: 6, coverage: 0.45 }, teeth: true, spine: true,
     },
     build() {
-      const r = theropod('carcharodontosaurus', base({
+      const r = make('carcharodontosaurus', base({
         hipY: 30,
         body: { len: 37, w: 14, h: 17, chest: 3 },
-        neck: { len: 9, w: 10, h: 12, angle: 26 },
+        neck: { len: 13, w: 10, h: 12, angle: 28, segments: 2 },
         head: { len: 12, w: 11, h: 13, snoutLen: 12, snoutW: 9, snoutH: 9, jawH: 5 },
         tail: { len: 48, segments: 5, lift: 3 },
         arms: { len: 8, w: 3, angle: -45, big: true },
@@ -381,15 +477,15 @@ export const theropodsLarge: CreatureDef[] = [
       pattern: { type: 'stripes', colour: '#2e2414', scale: 3, coverage: 0.4 }, teeth: true, spine: true,
     },
     build() {
-      return theropod('herrerasaurus', base({
+      return make('herrerasaurus', base({
         hipY: 14,
         body: { len: 16, w: 6, h: 7, chest: 1 },
-        neck: { len: 6, w: 4, h: 4, angle: 32 },
+        neck: { len: 8, w: 4, h: 4, angle: 32, segments: 2 },
         head: { len: 5, w: 5, h: 5, snoutLen: 5, snoutW: 4, snoutH: 3, jawH: 2 },
         tail: { len: 28, segments: 5, lift: 2, w: 4, h: 4, tipW: 1, tipH: 1 },
         arms: { len: 6, w: 1, angle: -40 },
         legs: { thighW: 4, footLen: 5, footW: 3 },
-      }));
+      }), { thigh: 1, calf: 0, neckBase: 1, tailBulk: 1, jowl: 0 });
     },
   },
   {
@@ -408,11 +504,11 @@ export const theropodsLarge: CreatureDef[] = [
     spawn: { biomes: ['prehistoric', 'forest', 'taiga', 'plains'], weight: 2, herd: [1, 2] },
     sounds: SND.bigCarn,
     palette: {
-      back: '#3a4a52', side: '#5f7480', belly: '#d8d4c4', accent: '#c06a2a', eye: '#e8b030',
-      pattern: { type: 'stripes', colour: '#24323a', scale: 5, coverage: 0.4 }, teeth: true, spine: true,
+      back: '#4a4a3c', side: '#76735c', belly: '#dad4bc', accent: '#a8623a', eye: '#e8b030',
+      pattern: { type: 'stripes', colour: '#2e2e24', scale: 5, coverage: 0.4 }, teeth: true, spine: true,
     },
     build() {
-      const r = theropod('albertosaurus', base({
+      const r = make('albertosaurus', base({
         hipY: 28,
         body: { len: 28, w: 11, h: 14, chest: 2 },
         neck: { len: 8, w: 8, h: 10, angle: 28 },
@@ -445,7 +541,7 @@ export const theropodsLarge: CreatureDef[] = [
       pattern: { type: 'mottled', colour: '#2a2018', scale: 4, coverage: 0.45 }, teeth: true, spine: true,
     },
     build() {
-      const r = theropod('gorgosaurus', base({
+      const r = make('gorgosaurus', base({
         hipY: 28,
         body: { len: 29, w: 11, h: 14, chest: 2 },
         neck: { len: 8, w: 8, h: 10, angle: 28 },
@@ -475,11 +571,11 @@ export const theropodsLarge: CreatureDef[] = [
     spawn: { biomes: ['prehistoric', 'savanna', 'jungle'], weight: 2, herd: [1, 1] },
     sounds: SND.bigCarn,
     palette: {
-      back: '#5a3a4a', side: '#8a5a6a', belly: '#e0c8b8', accent: '#e0a040', eye: '#f0d040',
-      pattern: { type: 'spots', colour: '#3a2230', scale: 3, coverage: 0.5 }, teeth: true, spine: true,
+      back: '#5a4436', side: '#866650', belly: '#ddc8ae', accent: '#c88a40', eye: '#f0d040',
+      pattern: { type: 'spots', colour: '#3a2a22', scale: 3, coverage: 0.5 }, teeth: true, spine: true,
     },
     build() {
-      const r = theropod('majungasaurus', base({
+      const r = make('majungasaurus', base({
         hipY: 23,
         body: { len: 28, w: 12, h: 14, chest: 2 },
         neck: { len: 8, w: 9, h: 10, angle: 28 },

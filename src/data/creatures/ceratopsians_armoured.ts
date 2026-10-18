@@ -27,7 +27,7 @@ function beak(r: Rig, o: { len: number; h?: number; w?: number }) {
  */
 function shield(
   r: Rig,
-  o: { w: number; h: number; tilt: number; knobs?: number; spikes?: { n: number; len: number; spread?: number }; mat?: Material; up?: number; window?: boolean; patch?: string; patch2?: string },
+  o: { w: number; h: number; tilt: number; knobs?: number; spikes?: { n: number; len: number; spread?: number }; mat?: Material; up?: number; window?: boolean; patch?: string; patch2?: string; thick?: number },
 ) {
   const z = r.a.headPivot[2] - 2;
   const y0 = r.a.headTop - 3 + (o.up ?? 0);
@@ -48,7 +48,7 @@ function shield(
   for (const [fw, fh] of rows) {
     const w = Math.max(2, Math.round(o.w * fw));
     const hh = Math.max(1, Math.round(o.h * fh));
-    fb.box([-w / 2, y, z], [w, hh, 2], mat);
+    fb.box([-w / 2, y, z], [w, hh, o.thick ?? 2], mat);
     y += hh;
   }
   const top = y;
@@ -104,6 +104,70 @@ function sideSpikes(r: Rig, bone: string, x: number, y: number, z: number, len: 
   r.mb.get(bone).pair([x, y, z], [len, w, w], 'plate', { rotation: [0, fwd, 12], pivot: [x, y + w / 2, z + w / 2] });
 }
 
+/**
+ * Rounds out a quadruped torso: a narrower cap along the spine, a sagging belly and
+ * muscle masses at shoulders and hips, so the body reads as a barrel rather than a slab.
+ */
+function bulkQuad(r: Rig, o: { cap?: number; sag?: number; shoulder?: number; hip?: number; capMat?: Material } = {}) {
+  const b = r.mb.get('body');
+  const { bodyW: w, bodyH: h, bodyFront: f, bodyBack: k, bodyY: y } = r.a;
+  const len = k - f;
+  const top = y + h / 2;
+  const bot = y - h / 2;
+  const cap = o.cap ?? 2;
+  if (cap > 0) {
+    b.box([-(w - 4) / 2, top - 1, f + 3], [w - 4, cap + 1, len - 6], o.capMat ?? 'skin');
+    if (cap > 1) b.box([-(w - 8) / 2, top + cap - 1, f + 6], [Math.max(2, w - 8), 1, len - 12], o.capMat ?? 'skin');
+  }
+  const sag = o.sag ?? 2;
+  if (sag > 0) b.box([-(w - 3) / 2, bot - sag, f + len * 0.22], [w - 3, sag + 1, len * 0.5], 'skin');
+  // side muscle bulges over the shoulder and the hip
+  const sh = o.shoulder ?? 1;
+  const hp = o.hip ?? 1.5;
+  b.pair([w / 2 - 1, y - h * 0.3, f + len * 0.1], [1 + sh, h * 0.6, len * 0.22], 'skin');
+  b.pair([w / 2 - 1, y - h * 0.25, k - len * 0.36], [1 + hp, h * 0.65, len * 0.28], 'skin');
+}
+
+/** Thickens the upper leg bones (humerus/thigh muscle) of a quadruped. */
+function muscleLegs(r: Rig, front = 2, back = 3) {
+  for (const leg of r.legs) {
+    const bone = r.mb.get(leg.chain[0]);
+    const c = bone.bone.cubes[0];
+    const [x0, y0, z0] = c.origin;
+    const [w, hgt, d] = c.size;
+    const add = leg.front ? front : back;
+    const mh = Math.round(hgt * (leg.front ? 0.55 : 0.65));
+    bone.box([x0 - add / 2, y0 + hgt - mh, z0 - add / 2 - (leg.front ? 0 : 1)], [w + add, mh, d + add + (leg.front ? 0 : 2)], 'skin', { tags: ['limb'] });
+  }
+}
+
+/** Rows of raised oval osteoderms over the back (ankylosaurs/nodosaurs). */
+function osteoderms(r: Rig, o: { rows: number; cols: number; size?: number; from?: number; to?: number; spread?: number; lift?: number }) {
+  const b = r.mb.get('body');
+  const { bodyW: w, bodyFront: f, bodyBack: k, bodyY: y, bodyH: h } = r.a;
+  const from = o.from ?? f + 2;
+  const to = o.to ?? k - 3;
+  const sz = o.size ?? 2;
+  const spread = o.spread ?? 0.42;
+  for (let i = 0; i < o.rows; i++) {
+    const z = from + ((to - from) * i) / Math.max(1, o.rows - 1);
+    for (let j = 0; j < o.cols; j++) {
+      const t = o.cols === 1 ? 0 : j / (o.cols - 1) - 0.5;
+      const x = t * w * 2 * spread;
+      // follow the curve of the back: lower towards the flanks
+      const yy = y + h / 2 + (o.lift ?? 2) - Math.abs(t) * Math.abs(t) * h * 0.9;
+      b.box([x - sz / 2, yy, z - sz / 2 + (j % 2) * 0.8], [sz, Math.max(1, sz - 1), sz], 'plate', { inflate: 0.1 });
+    }
+  }
+}
+
+/** Flat triangular lateral spike made of two stacked slabs (points outward). */
+function flankSpike(r: Rig, bone: string, x: number, y: number, z: number, len: number, back = 15, w = 3) {
+  const b = r.mb.get(bone);
+  b.pair([x, y, z], [len, 1, w], 'plate', { rotation: [0, back, 0], pivot: [x, y, z + w / 2] });
+  b.pair([x, y, z + 0.5], [Math.max(1, Math.round(len * 0.55)), 1, Math.max(1, w - 1)], 'plate', { rotation: [0, back, 0], pivot: [x, y, z + w / 2], inflate: 0.2 });
+}
+
 const herb = { diet: 'herbivore' as const, habitat: 'land' as const };
 
 // ---------------------------------------------------------------------------
@@ -129,22 +193,26 @@ export const ceratopsiansArmoured: CreatureDef[] = [
     sounds: SND.herd,
     prey: true,
     palette: {
-      back: '#5a5636', side: '#7b7349', belly: '#cbbd93', accent: '#9a4426', accent2: '#e2a640', horn: '#e6dcc0', eye: '#d89a2a',
-      pattern: { type: 'mottled', colour: '#3f3c25', scale: 5, coverage: 0.55 },
+      back: '#55513a', side: '#77704f', belly: '#c9bc98', accent: '#7c4c33', accent2: '#b08c58', horn: '#ddd2b6', eye: '#c08a2a',
+      pattern: { type: 'mottled', colour: '#3d3a28', scale: 5, coverage: 0.55 },
     },
     build() {
       const r = quadruped('triceratops', {
         frontLeg: 13,
         backLeg: 16,
-        body: { len: 30, w: 17, h: 15, belly: 2 },
+        body: { len: 30, w: 18, h: 15, belly: 2 },
         neck: { len: 4, w: 12, h: 12, angle: -6 },
-        head: { len: 13, w: 14, h: 14, snoutLen: 9, snoutW: 10, snoutH: 9, jawH: 4, eyeR: 1.1 },
+        head: { len: 14, w: 15, h: 15, snoutLen: 11, snoutW: 10, snoutH: 11, jawH: 4, eyeR: 1.1, cheek: 2 },
         headAngle: 10,
-        tail: { len: 20, segments: 3, w: 9, h: 9, lift: 0 },
-        legs: { frontW: 6, backW: 7, footLen: 2, elbow: 10 },
+        tail: { len: 20, segments: 3, w: 10, h: 9, lift: 0 },
+        legs: { frontW: 7, backW: 8, footLen: 2, elbow: 12, sprawl: 1 },
       });
-      beak(r, { len: 3, h: 4, w: 5 });
-      shield(r, { w: 28, h: 20, tilt: 66, knobs: 13, up: 1, patch: '#9a4426', patch2: '#e2a640' });
+      bulkQuad(r, { cap: 2, sag: 2, shoulder: 1.5, hip: 2 });
+      muscleLegs(r, 2, 3);
+      beak(r, { len: 4, h: 5, w: 5 });
+      shield(r, { w: 30, h: 21, tilt: 64, knobs: 13, up: 1, thick: 3, patch: '#7c4c33', patch2: '#a8844a' });
+      // epijugal cheek horns flaring down and out
+      r.mb.get(r.head).pair([r.a.headW / 2 - 1, r.a.jawY - 3, r.a.craniumZ0 + 3], [2, 4, 2], 'horn', { rotation: [-20, 0, -40], pivot: [r.a.headW / 2, r.a.jawY - 1, r.a.craniumZ0 + 4] });
       F.hornPair(r, { fromTip: 14, len: 16, w: 2, tilt: 62, splay: 6, up: -1 });
       F.noseHorn(r, { fromTip: 4, len: 4, w: 2, tilt: 15, up: 7 });
       return r;
@@ -170,7 +238,7 @@ export const ceratopsiansArmoured: CreatureDef[] = [
     sounds: { ...SND.herd, pitch: 0.65 },
     prey: true,
     palette: {
-      back: '#4b5a3c', side: '#6e7c50', belly: '#d2c79c', accent: '#2f6680', accent2: '#e8c24a', horn: '#ece2c6', eye: '#e0b030',
+      back: '#4f5a3e', side: '#717b55', belly: '#d0c59e', accent: '#53624e', accent2: '#b89a52', horn: '#e2d8bc', eye: '#c89a30',
       pattern: { type: 'stripes', colour: '#33402a', scale: 6, coverage: 0.4 },
     },
     build() {
@@ -179,13 +247,15 @@ export const ceratopsiansArmoured: CreatureDef[] = [
         backLeg: 14,
         body: { len: 26, w: 15, h: 14, belly: 2 },
         neck: { len: 4, w: 10, h: 10, angle: -8 },
-        head: { len: 10, w: 11, h: 11, snoutLen: 7, snoutW: 8, snoutH: 7, jawH: 3 },
+        head: { len: 11, w: 12, h: 12, snoutLen: 9, snoutW: 8, snoutH: 9, jawH: 3, cheek: 1 },
         headAngle: 10,
         tail: { len: 18, segments: 3, w: 8, h: 8, lift: 0 },
-        legs: { frontW: 5, backW: 6, footLen: 2 },
+        legs: { frontW: 6, backW: 7, footLen: 2, elbow: 10, sprawl: 1 },
       });
-      beak(r, { len: 3, h: 3, w: 4 });
-      shield(r, { w: 18, h: 12, tilt: 62, knobs: 5, spikes: { n: 6, len: 14, spread: 78 }, patch: '#2f6680', patch2: '#e8c24a' });
+      bulkQuad(r, { cap: 2, sag: 2 });
+      muscleLegs(r, 2, 3);
+      beak(r, { len: 3, h: 4, w: 4 });
+      shield(r, { w: 18, h: 12, tilt: 62, knobs: 5, thick: 3, spikes: { n: 6, len: 14, spread: 78 }, patch: '#5c4a36', patch2: '#b89a52' });
       F.noseHorn(r, { fromTip: 3, len: 13, w: 2, tilt: 14, up: 6 });
       F.hornPair(r, { fromTip: 12, len: 2, w: 1, tilt: 30, splay: 0 });
       return r;
@@ -211,7 +281,7 @@ export const ceratopsiansArmoured: CreatureDef[] = [
     sounds: { ...SND.herd, pitch: 0.5 },
     prey: true,
     palette: {
-      back: '#5e4630', side: '#80654a', belly: '#d8c4a0', accent: '#7d3b2b', accent2: '#c88a52', horn: '#d9ccb0', eye: '#c98a2a',
+      back: '#5e4630', side: '#80654a', belly: '#d8c4a0', accent: '#6a4430', accent2: '#a8805a', horn: '#d9ccb0', eye: '#c98a2a',
       pattern: { type: 'bands', colour: '#43301f', scale: 6, coverage: 0.35 },
     },
     build() {
@@ -223,14 +293,16 @@ export const ceratopsiansArmoured: CreatureDef[] = [
         head: { len: 12, w: 12, h: 13, snoutLen: 10, snoutW: 9, snoutH: 10, jawH: 4 },
         headAngle: 16,
         tail: { len: 18, segments: 3, w: 9, h: 8, lift: 0 },
-        legs: { frontW: 6, backW: 7, footLen: 2 },
+        legs: { frontW: 7, backW: 8, footLen: 2, elbow: 10, sprawl: 1 },
       });
+      bulkQuad(r, { cap: 2, sag: 2, hip: 2 });
+      muscleLegs(r, 2, 3);
       beak(r, { len: 3, h: 4, w: 5 });
       const hd = r.mb.get(r.head);
       // nasal boss: big rough pad covering the snout and brow
       hd.box([-4, r.a.headTop - 1, r.a.snoutTip + 2], [8, 3, 13], 'horn', { inflate: 0.2 });
       hd.box([-3, r.a.headTop + 1, r.a.snoutTip + 4], [6, 2, 9], 'horn');
-      shield(r, { w: 22, h: 14, tilt: 62, knobs: 6, spikes: { n: 2, len: 8, spread: 24 }, patch: '#7d3b2b' });
+      shield(r, { w: 22, h: 14, tilt: 62, knobs: 6, thick: 3, spikes: { n: 2, len: 8, spread: 24 }, patch: '#6a4430' });
       return r;
     },
   },
@@ -252,7 +324,7 @@ export const ceratopsiansArmoured: CreatureDef[] = [
     sounds: { ...SND.small, pitch: 0.6 },
     prey: true,
     palette: {
-      back: '#9a7a4c', side: '#b9975f', belly: '#e6d4ae', accent: '#b0663a', accent2: '#e7b964', horn: '#e8dcbc', eye: '#3a2a18',
+      back: '#8f7450', side: '#b09465', belly: '#e2d2b0', accent: '#9a6a42', accent2: '#c8a46a', horn: '#e8dcbc', eye: '#3a2a18',
       pattern: { type: 'spots', colour: '#6f5532', scale: 3, coverage: 0.45 },
     },
     build() {
@@ -264,10 +336,12 @@ export const ceratopsiansArmoured: CreatureDef[] = [
         head: { len: 6, w: 6, h: 7, snoutLen: 5, snoutW: 4, snoutH: 6, jawH: 2, eyeR: 0.8 },
         headAngle: 12,
         tail: { len: 11, segments: 3, w: 4, h: 5, lift: 1, tipW: 1, tipH: 2 },
-        legs: { frontW: 2, backW: 3, footLen: 1 },
+        legs: { frontW: 3, backW: 3, footLen: 1, elbow: 10 },
       });
-      beak(r, { len: 2, h: 2, w: 3 });
-      shield(r, { w: 12, h: 9, tilt: 58, patch: '#b0663a' });
+      bulkQuad(r, { cap: 1, sag: 1, shoulder: 0.5, hip: 1 });
+      muscleLegs(r, 1, 2);
+      beak(r, { len: 2, h: 3, w: 3 });
+      shield(r, { w: 12, h: 9, tilt: 58, patch: '#9a6a42' });
       // deep, flattened tail typical of Protoceratops
       r.mb.get(r.tail[0]).box([-0.5, r.a.bodyY + 2, r.a.bodyBack], [1, 3, 6], 'skin');
       return r;
@@ -336,7 +410,7 @@ export const ceratopsiansArmoured: CreatureDef[] = [
     sounds: { ...SND.herd, pitch: 0.45 },
     prey: true,
     palette: {
-      back: '#55613d', side: '#748055', belly: '#d3caa0', accent: '#b9542b', accent2: '#e8b04a', plateTip: '#c9522c', eye: '#d9a03a',
+      back: '#56603f', side: '#767e57', belly: '#d0c8a2', accent: '#8a5634', accent2: '#c09a5a', plateTip: '#9a6a44', eye: '#c0902a',
       pattern: { type: 'blotches', colour: '#3c4629', scale: 5, coverage: 0.5 },
     },
     build() {
@@ -348,16 +422,18 @@ export const ceratopsiansArmoured: CreatureDef[] = [
         head: { len: 5, w: 5, h: 5, snoutLen: 4, snoutW: 4, snoutH: 3, jawH: 2, eyeR: 0.7 },
         headAngle: 18,
         tail: { len: 30, segments: 4, w: 9, h: 9, lift: 0 },
-        legs: { frontW: 5, backW: 7, footLen: 2, elbow: 6, knee: -6 },
+        legs: { frontW: 6, backW: 8, footLen: 2, elbow: 8, knee: -6 },
       });
+      bulkQuad(r, { cap: 2, sag: 2, shoulder: 1, hip: 2.5 });
+      muscleLegs(r, 2, 4);
       beak(r, { len: 1, h: 2, w: 3 });
       // two staggered rows of kite-shaped plates, tallest over the hips
       const n = 8;
       for (let i = 0; i < n; i++) {
         const t = i / (n - 1);
-        const z = r.a.bodyFront + 3 + (r.a.bodyBack - r.a.bodyFront - 5) * t;
-        const h = Math.round(6 + 9 * Math.sin(Math.PI * (0.15 + t * 0.75)));
-        kitePlate(r, 'body', i % 2 ? 1 : -1, r.a.bodyTop - 1, z, h);
+        const z = r.a.bodyFront + 2 + (r.a.bodyBack - r.a.bodyFront - 4) * t;
+        const h = Math.round(3 + 7 * Math.sin(Math.PI * (0.12 + t * 0.78)));
+        kitePlate(r, 'body', i % 2 ? 1.2 : -1.2, r.a.bodyTop + 1, z, h, 12);
       }
       r.tail.slice(0, 2).forEach((tn, ti) => {
         const [, py, pz] = r.mb.get(tn).pivot;
@@ -404,8 +480,10 @@ export const ceratopsiansArmoured: CreatureDef[] = [
         head: { len: 4, w: 4, h: 4, snoutLen: 3, snoutW: 3, snoutH: 2, jawH: 1, eyeR: 0.6 },
         headAngle: 16,
         tail: { len: 22, segments: 4, w: 6, h: 6, lift: 4 },
-        legs: { frontW: 4, backW: 5, footLen: 1 },
+        legs: { frontW: 4, backW: 6, footLen: 1, elbow: 8 },
       });
+      bulkQuad(r, { cap: 1, sag: 1, hip: 2 });
+      muscleLegs(r, 1, 3);
       beak(r, { len: 1, h: 2, w: 2 });
       // paired plates over neck and shoulders, turning into spikes towards the hips
       const b = r.mb.get('body');
@@ -444,8 +522,8 @@ export const ceratopsiansArmoured: CreatureDef[] = [
     spawn: { biomes: ['prehistoric', 'plains', 'forest'], weight: 4, herd: [1, 2] },
     sounds: SND.armoured,
     palette: {
-      back: '#6a5a40', side: '#887455', belly: '#d2c29e', accent: '#7b4a2a', accent2: '#b88a52', plateTip: '#e2d6b4', horn: '#d6c8a6', eye: '#c08a2a',
-      pattern: { type: 'mottled', colour: '#4a3e2a', scale: 4, coverage: 0.5 },
+      back: '#6a5a40', side: '#887455', belly: '#d2c29e', accent: '#7b4a2a', accent2: '#b88a52', plateTip: '#a8977a', horn: '#cdbf9e', eye: '#c08a2a',
+      pattern: { type: 'mottled', colour: '#4a3e2a', scale: 4, coverage: 0.5 }, spine: true,
     },
     build() {
       const r = quadruped('ankylosaurus', {
@@ -459,8 +537,11 @@ export const ceratopsiansArmoured: CreatureDef[] = [
         legs: { frontW: 6, backW: 7, sprawl: 1.5, footLen: 2, elbow: 4, knee: -4 },
       });
       beak(r, { len: 1, h: 3, w: 6 });
-      F.armourBack(r, { spikes: 5, spikeLen: 4 });
-      shellDome(r, 3, 2);
+      bulkQuad(r, { cap: 2, sag: 1, shoulder: 1, hip: 1 });
+      muscleLegs(r, 2, 2);
+      osteoderms(r, { rows: 6, cols: 5, size: 2, spread: 0.46 });
+      // flat triangular spikes along the flanks, longest over the hips
+      for (let i = 0; i < 5; i++) flankSpike(r, 'body', r.a.bodyW / 2 + 0.5, r.a.bodyY - 1, r.a.bodyFront + 3 + i * 5.5, 3 + (i % 3), 10 + i * 4, 3);
       // armoured skull roof and backward-pointing squamosal horns
       const hd = r.mb.get(r.head);
       hd.box([-r.a.headW / 2 - 0.5, r.a.headTop - 1, r.a.craniumZ0 + 1], [r.a.headW + 1, 2, 8], 'armor');
@@ -494,8 +575,8 @@ export const ceratopsiansArmoured: CreatureDef[] = [
     spawn: { biomes: ['prehistoric', 'forest', 'taiga'], weight: 4, herd: [1, 2] },
     sounds: { ...SND.armoured, pitch: 0.6 },
     palette: {
-      back: '#4e4a44', side: '#6c665c', belly: '#c9c0aa', accent: '#3c3a36', accent2: '#8e8676', plateTip: '#d8cfb8', horn: '#cfc4a8', eye: '#a8762a',
-      pattern: { type: 'spots', colour: '#363330', scale: 3, coverage: 0.5 },
+      back: '#5a5242', side: '#7a705a', belly: '#cfc4a8', accent: '#463f32', accent2: '#8e8676', plateTip: '#9a8f78', horn: '#c2b79c', eye: '#a8762a',
+      pattern: { type: 'mottled', colour: '#463f32', scale: 4, coverage: 0.45 },
     },
     build() {
       const r = quadruped('euoplocephalus', {
@@ -509,15 +590,16 @@ export const ceratopsiansArmoured: CreatureDef[] = [
         legs: { frontW: 5, backW: 6, sprawl: 1.5, footLen: 2, elbow: 4, knee: -4 },
       });
       beak(r, { len: 1, h: 3, w: 5 });
-      F.armourBack(r, { spikes: 3, spikeLen: 3 });
-      shellDome(r, 3, 1);
-      // rows of tall conical scutes down the back
+      bulkQuad(r, { cap: 2, sag: 1, shoulder: 1, hip: 1 });
+      muscleLegs(r, 2, 2);
+      osteoderms(r, { rows: 6, cols: 4, size: 2, spread: 0.4 });
+      // bands of tall conical scutes (keeled osteoderms) down the back
       const b = r.mb.get('body');
       for (let i = 0; i < 5; i++) {
         const z = r.a.bodyFront + 4 + i * 4.5;
-        b.pair([3, r.a.bodyTop + 1, z], [2, 3, 2], 'plate', { rotation: [0, 0, -8], pivot: [4, r.a.bodyTop + 1, z + 1] });
-        b.pair([7, r.a.bodyTop, z + 2], [2, 2, 2], 'plate');
+        b.pair([3, r.a.bodyTop + 2, z], [2, 3, 2], 'plate', { rotation: [0, 0, -8], pivot: [4, r.a.bodyTop + 2, z + 1] });
       }
+      for (let i = 0; i < 4; i++) flankSpike(r, 'body', r.a.bodyW / 2 + 0.5, r.a.bodyY - 1, r.a.bodyFront + 4 + i * 5, 2, 12, 2);
       // bony eyelids over the eyes and short head horns
       const hd = r.mb.get(r.head);
       const eyeZ = r.a.craniumZ0 + 2;
@@ -551,7 +633,7 @@ export const ceratopsiansArmoured: CreatureDef[] = [
     spawn: { biomes: ['prehistoric', 'forest', 'plains'], weight: 4, herd: [1, 2] },
     sounds: { ...SND.armoured, pitch: 0.5 },
     palette: {
-      back: '#7a4630', side: '#9a6244', belly: '#dcc3a0', accent: '#5a2e1e', accent2: '#c48a5a', plateTip: '#ead8b8', horn: '#e0cfae', eye: '#2a1a10',
+      back: '#7a4630', side: '#9a6244', belly: '#dcc3a0', accent: '#5a2e1e', accent2: '#c48a5a', plateTip: '#b08664', horn: '#d6c4a2', eye: '#2a1a10',
       pattern: { type: 'mottled', colour: '#5a3020', scale: 4, coverage: 0.45 },
     },
     build() {
@@ -566,8 +648,9 @@ export const ceratopsiansArmoured: CreatureDef[] = [
         legs: { frontW: 5, backW: 6, sprawl: 1, footLen: 2 },
       });
       beak(r, { len: 1, h: 2, w: 4 });
-      F.armourBack(r, { spikes: 4, spikeLen: 3 });
-      shellDome(r, 3, 1);
+      bulkQuad(r, { cap: 2, sag: 1, shoulder: 1, hip: 1 });
+      muscleLegs(r, 2, 2);
+      osteoderms(r, { rows: 6, cols: 5, size: 2, spread: 0.45 });
       // big forward-curving shoulder spikes
       sideSpikes(r, 'body', r.a.bodyW / 2, r.a.bodyY, r.a.bodyFront + 3, 7, 40, 2);
       sideSpikes(r, 'body', r.a.bodyW / 2, r.a.bodyY + 1, r.a.bodyFront + 7, 5, 25, 2);

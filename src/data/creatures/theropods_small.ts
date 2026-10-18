@@ -35,6 +35,123 @@ function backFluff(r: Rig, o: { h: number }) {
   b.box([-1, bodyTop - 1, bodyFront + 2], [2, o.h + 1, bodyBack - bodyFront - 4], 'feather');
 }
 
+export interface SculptOpts {
+  /** brow ridge over the eyes (px tall) */
+  brow?: number;
+  /** jaw-closing muscles bulging behind the eyes (carnivores) */
+  cheeks?: boolean;
+  /** thicker thigh "drumstick" muscle */
+  thighs?: number;
+  /** add neck-base and tail-base muscle so the body flows into neck and tail */
+  flow?: boolean;
+  /** separate toes with claws instead of a single slab foot */
+  toes?: boolean;
+  /** separate finger claws on the hands */
+  fingers?: number;
+  /** feathered trousers on the thighs and a ruff around the neck base */
+  fluff?: boolean;
+  /** raised rugose ridge along the top of the snout (tyrannosaurs) */
+  nasalRidge?: boolean;
+}
+
+/**
+ * Realism pass applied on top of the theropod rig: turns slab parts into
+ * muscled, tapering anatomy. Reads the rig's own cubes so it adapts to any size.
+ */
+export function sculpt(r: Rig, o: SculptOpts) {
+  const { a, mb } = r;
+  const coat = (b: string) => (mb.get(b).bone.cubes[0]?.mat === 'feather' ? 'feather' : 'skin');
+  const head = mb.get(r.head);
+  const cranLen = a.headPivot[2] - a.craniumZ0;
+  const jawH = Math.max(1, Math.round(a.headH * 0.3));
+  const cranH = a.headH - jawH;
+  if (o.brow) {
+    const eyeZ = a.craniumZ0 + Math.max(1.5, cranLen * 0.28);
+    const eyeY = a.jawY + cranH * 0.68;
+    head.pair([a.headW / 2 - 1, eyeY + 0.6, eyeZ - 1.5], [1, o.brow, Math.max(2, Math.round(cranLen * 0.35))], coat(r.head), { inflate: 0.25 });
+  }
+  if (o.cheeks) {
+    const len = Math.max(2, Math.round(cranLen * 0.45));
+    head.pair([a.headW / 2 - 1, a.jawY - 1, a.headPivot[2] - len - 1], [1, Math.max(2, Math.round(cranH * 0.6)), len], 'skin', { inflate: 0.35 });
+  }
+  if (o.nasalRidge) head.box([-1, a.headTop - 1.5, a.snoutTip + 2], [2, 1, Math.max(2, a.craniumZ0 - a.snoutTip - 2)], 'skin', { inflate: 0.1 });
+
+  if (o.flow) {
+    // neck base: a wedge of muscle joining the chest to the neck
+    const n0 = mb.get(r.neck[0]);
+    const nc = n0.bone.cubes[0];
+    if (nc) {
+      const [nw, nh] = nc.size;
+      const body = mb.get('body');
+      body.box([-(nw + 2) / 2, n0.pivot[1] - nh / 2 - 1, a.bodyFront - 1], [nw + 2, nh + 2, 4], coat('body'));
+    }
+    // tail base: the big caudofemoralis muscle
+    const t0 = mb.get(r.tail[0]);
+    const tc = t0.bone.cubes[0];
+    if (tc) {
+      const [tw, th, tl] = tc.size;
+      t0.box([-(tw + 1) / 2, tc.origin[1] - 1, tc.origin[2]], [tw + 1, Math.max(2, Math.round(th * 0.7)), Math.max(2, Math.round(tl * 0.6))], coat(r.tail[0]));
+    }
+  }
+
+  for (const leg of r.legs) {
+    const thigh = mb.get(leg.chain[0]);
+    const tc = thigh.bone.cubes[0];
+    if (o.thighs && tc) {
+      const [w, h, d] = tc.size;
+      const grow = o.thighs;
+      thigh.box([tc.origin[0] - grow / 2, tc.origin[1] + h * 0.35, tc.origin[2] - grow / 2], [w + grow, Math.round(h * 0.6), d + grow], tc.mat, { tags: ['limb'] });
+      if (o.fluff) thigh.box([tc.origin[0] - grow / 2, tc.origin[1] + h * 0.15, tc.origin[2] - grow / 2], [w + grow, Math.round(h * 0.3), d + grow], 'feather', { inflate: 0.3, tags: ['limb'] });
+    }
+    if (o.toes) {
+      const foot = mb.get(leg.chain[leg.chain.length - 1]);
+      const cubes = foot.bone.cubes;
+      const slab = cubes.find((c) => c.mat !== 'claw' && c.size[1] === 2 && c.size[2] > 2);
+      if (!slab) continue;
+      foot.bone.cubes = cubes.filter((c) => c !== slab && c.mat !== 'claw');
+      const [x0, y0, z0] = slab.origin;
+      const [fw, , fl] = slab.size;
+      const n = fw >= 3 ? 3 : 2;
+      const toeW = 1;
+      const cx = x0 + fw / 2;
+      const toeZ1 = z0 + fl; // back of the toes
+      for (let i = 0; i < n; i++) {
+        const off = n === 3 ? i - 1 : i - 0.5;
+        const len = Math.round(fl * (off === 0 ? 1 : 0.78));
+        const tx = cx + off * Math.max(1, (fw - toeW) / (n - 1)) - toeW / 2;
+        const spread = off * 14;
+        foot.box([tx, y0, toeZ1 - len], [toeW, 2, Math.max(2, Math.round(len * 0.55))], 'skin', { rotation: [0, spread, 0], pivot: [tx + 0.5, y0, toeZ1], tags: ['limb'] });
+        foot.box([tx, y0, toeZ1 - len], [toeW, 1, len], 'skin', { rotation: [0, spread, 0], pivot: [tx + 0.5, y0, toeZ1], tags: ['limb'] });
+        foot.box([tx, y0, toeZ1 - len - 1], [toeW, 1, 1], 'claw', { rotation: [0, spread, 0], pivot: [tx + 0.5, y0, toeZ1] });
+      }
+      // dewclaw on the inside of the ankle
+      const inner = leg.side > 0 ? x0 : x0 + fw - 1;
+      foot.box([inner, y0 + 1, toeZ1 - 1], [1, 1, 1], 'claw');
+    }
+  }
+
+  if (o.fingers) {
+    for (const arm of r.arms) {
+      const b = mb.get(arm);
+      const claw = b.bone.cubes.find((c) => c.mat === 'claw');
+      if (!claw) continue;
+      b.bone.cubes = b.bone.cubes.filter((c) => c !== claw);
+      const [x0, y0, z0] = claw.origin;
+      const h = Math.max(1, claw.size[1]);
+      for (let i = 0; i < o.fingers; i++) {
+        const fx = x0 + (o.fingers === 1 ? 0 : (i / (o.fingers - 1)) * Math.max(0, claw.size[0] - 1)) ;
+        b.box([fx, y0 - 0.5, z0], [1, h + 1, 1], 'claw', { rotation: [25, 0, 0], pivot: [fx + 0.5, y0 + h, z0 + 0.5] });
+      }
+    }
+  }
+
+  if (o.fluff) {
+    const n0 = mb.get(r.neck[0]);
+    const nc = n0.bone.cubes[0];
+    if (nc) n0.box([nc.origin[0], nc.origin[1] - 0.5, nc.origin[2] + nc.size[2] * 0.4], [nc.size[0], nc.size[1] + 1, Math.max(2, Math.round(nc.size[2] * 0.6))], 'feather', { inflate: 0.3 });
+  }
+}
+
 export const theropodsSmall: CreatureDef[] = [
   {
     ...smallCarn,
@@ -62,13 +179,14 @@ export const theropodsSmall: CreatureDef[] = [
         body: { len: 16, w: 6, h: 7, chest: 1, tilt: -6 },
         neck: { len: 6, w: 4, h: 4, angle: 38, segments: 2 },
         head: { len: 4, w: 4, h: 4, snoutLen: 5, snoutW: 3, snoutH: 2, jawH: 1, eyeR: 0.8 },
-        tail: { len: 24, segments: 5, lift: 6, w: 4, h: 4, tipW: 1, tipH: 1 },
+        tail: { len: 24, segments: 6, lift: 5, w: 5, h: 5, tipW: 1, tipH: 2 },
         arms: { len: 5, w: 1, angle: -30 },
         legs: { thighW: 4, shinW: 2, footLen: 4, footW: 3 },
       });
       wingFeathers(r, { len: 6, h: 4 });
       F.tailFan(r, { w: 4, len: 6 });
       F.sickleClaws(r);
+      sculpt(r, { brow: 1, cheeks: true, thighs: 1, flow: true, toes: true, fingers: 3, fluff: true });
       return r;
     },
   },
@@ -98,7 +216,7 @@ export const theropodsSmall: CreatureDef[] = [
         body: { len: 18, w: 7, h: 8, chest: 1, tilt: -5 },
         neck: { len: 6, w: 5, h: 5, angle: 34, segments: 2 },
         head: { len: 5, w: 5, h: 5, snoutLen: 6, snoutW: 4, snoutH: 3, jawH: 2 },
-        tail: { len: 26, segments: 5, lift: 5, w: 5, h: 5, tipW: 1, tipH: 1 },
+        tail: { len: 28, segments: 6, lift: 4, w: 6, h: 6, tipW: 1, tipH: 2 },
         arms: { len: 6, w: 2, angle: -35 },
         legs: { thighW: 5, shinW: 3, footLen: 5, footW: 3 },
       });
@@ -107,6 +225,7 @@ export const theropodsSmall: CreatureDef[] = [
       F.sickleClaws(r);
       // red display feathers on the head
       r.mb.get('head').box([-1, r.a.headTop - 1, r.a.craniumZ0 + 1], [2, 2, 4], 'accent');
+      sculpt(r, { brow: 1, cheeks: true, thighs: 2, flow: true, toes: true, fingers: 3, fluff: true });
       return r;
     },
   },
@@ -137,7 +256,7 @@ export const theropodsSmall: CreatureDef[] = [
         body: { len: 22, w: 9, h: 10, chest: 2, tilt: -4 },
         neck: { len: 7, w: 6, h: 7, angle: 30, segments: 2 },
         head: { len: 6, w: 6, h: 6, snoutLen: 7, snoutW: 5, snoutH: 4, jawH: 2 },
-        tail: { len: 30, segments: 5, lift: 4, w: 6, h: 6, tipW: 2, tipH: 2 },
+        tail: { len: 32, segments: 6, lift: 3, w: 7, h: 7, tipW: 2, tipH: 2 },
         arms: { len: 8, w: 2, angle: -35 },
         legs: { thighW: 6, shinW: 4, footLen: 6, footW: 4 },
       });
@@ -145,6 +264,7 @@ export const theropodsSmall: CreatureDef[] = [
       F.tailFan(r, { w: 6, len: 8 });
       F.sickleClaws(r);
       backFluff(r, { h: 1 });
+      sculpt(r, { brow: 1, cheeks: true, thighs: 2, flow: true, toes: true, fingers: 3, fluff: true });
       return r;
     },
   },
@@ -165,8 +285,8 @@ export const theropodsSmall: CreatureDef[] = [
     sounds: { ...SND.small, pitch: 1.3 },
     prey: true,
     palette: {
-      back: '#14161f', side: '#232838', belly: '#3a4258', accent: '#2b4a7a', accent2: '#5a2f7a', eye: '#d0c040',
-      pattern: { type: 'mottled', colour: '#2f3e66', scale: 3, coverage: 0.4, strength: 0.6 }, teeth: true,
+      back: '#121418', side: '#1d2129', belly: '#353a44', accent: '#1c2638', accent2: '#2c3550', eye: '#d0c040',
+      pattern: { type: 'mottled', colour: '#25304a', scale: 3, coverage: 0.4, strength: 0.6 }, teeth: true,
     },
     build() {
       const r = theropod('microraptor', {
@@ -182,6 +302,7 @@ export const theropodsSmall: CreatureDef[] = [
       wingFeathers(r, { len: 10, h: 6, spread: 1 });
       legFeathers(r, { len: 7, h: 6 });
       F.tailFan(r, { w: 7, len: 7 });
+      sculpt(r, { flow: true, toes: true, fluff: true });
       return r;
     },
   },
@@ -218,6 +339,7 @@ export const theropodsSmall: CreatureDef[] = [
       wingFeathers(r, { len: 5, h: 4 });
       F.tailFan(r, { w: 4, len: 5 });
       F.sickleClaws(r);
+      sculpt(r, { brow: 1, thighs: 1, flow: true, toes: true, fingers: 3, fluff: true });
       return r;
     },
   },
@@ -238,12 +360,13 @@ export const theropodsSmall: CreatureDef[] = [
     sounds: { ...SND.small, pitch: 1.4 },
     prey: true,
     palette: {
-      back: '#55702c', side: '#8aa04a', belly: '#e4e0b0', accent: '#d07a2a', eye: '#e04020',
-      pattern: { type: 'stripes', colour: '#3a4e1c', scale: 2.5, coverage: 0.4 }, teeth: true, spine: true,
+      back: '#5a5632', side: '#8e8a58', belly: '#e4dcbc', accent: '#a8642a', eye: '#d8a020',
+      pattern: { type: 'stripes', colour: '#3c3a20', scale: 2.5, coverage: 0.4 }, teeth: true, spine: true,
     },
     build() {
       const r = theropod('compsognathus', {
         hipY: 12,
+        feathered: true,
         body: { len: 11, w: 4, h: 5, chest: 1, tilt: -6 },
         neck: { len: 6, w: 3, h: 3, angle: 38, segments: 2 },
         head: { len: 3, w: 3, h: 3, snoutLen: 3, snoutW: 2, snoutH: 2, jawH: 1, eyeR: 0.7 },
@@ -251,6 +374,7 @@ export const theropodsSmall: CreatureDef[] = [
         arms: { len: 3, w: 1, angle: -30 },
         legs: { thighW: 3, shinW: 2, footLen: 3, footW: 2 },
       });
+      sculpt(r, { thighs: 1, flow: true, toes: true, fluff: true });
       return r;
     },
   },
@@ -279,7 +403,7 @@ export const theropodsSmall: CreatureDef[] = [
         body: { len: 14, w: 5, h: 6, chest: 0, tilt: -8 },
         neck: { len: 10, w: 3, h: 3, angle: 45, segments: 3 },
         head: { len: 4, w: 3, h: 3, snoutLen: 6, snoutW: 2, snoutH: 2, jawH: 1, snoutDrop: -0 },
-        tail: { len: 26, segments: 5, lift: 5, w: 4, h: 4, tipW: 1, tipH: 1 },
+        tail: { len: 28, segments: 6, lift: 4, w: 5, h: 5, tipW: 1, tipH: 1 },
         arms: { len: 5, w: 1, angle: -30 },
         legs: { thighW: 4, shinW: 2, footLen: 4, footW: 3 },
       });
@@ -289,6 +413,7 @@ export const theropodsSmall: CreatureDef[] = [
         const [, py, pz] = b.pivot;
         b.box([-0.5, py + 1, pz - 3], [1, 1, 3], 'accent');
       }
+      sculpt(r, { brow: 1, thighs: 1, flow: true, toes: true, fingers: 3 });
       return r;
     },
   },
@@ -320,11 +445,12 @@ export const theropodsSmall: CreatureDef[] = [
         body: { len: 16, w: 8, h: 9, chest: 1, tilt: -8 },
         neck: { len: 16, w: 3, h: 3, angle: 58, segments: 3 },
         head: { len: 3, w: 4, h: 4, snoutLen: 4, snoutW: 2, snoutH: 2, jawH: 1, beak: true, eyeR: 0.9 },
-        tail: { len: 22, segments: 4, lift: 5, w: 5, h: 5, tipW: 1, tipH: 1 },
+        tail: { len: 26, segments: 5, lift: 3, w: 6, h: 6, tipW: 1, tipH: 2 },
         arms: { len: 7, w: 1, angle: -25 },
         legs: { thighW: 5, shinW: 3, footLen: 5, footW: 3 },
       });
       wingFeathers(r, { len: 5, h: 4 });
+      sculpt(r, { thighs: 2, flow: true, toes: true, fluff: true });
       return r;
     },
   },
@@ -344,8 +470,8 @@ export const theropodsSmall: CreatureDef[] = [
     sounds: { ...SND.small, pitch: 0.9 },
     prey: true,
     palette: {
-      back: '#3e4a5a', side: '#6a7a8a', belly: '#e6e2d6', accent: '#d4422a', accent2: '#f0a030', eye: '#e8d040', horn: '#d6c4a0',
-      pattern: { type: 'stripes', colour: '#2a3240', scale: 3, coverage: 0.3, strength: 0.6 },
+      back: '#4a4036', side: '#7a6c58', belly: '#e2d8c4', accent: '#b5552e', accent2: '#d8c8a8', eye: '#e8d040', horn: '#c8b48c',
+      pattern: { type: 'stripes', colour: '#33291f', scale: 3, coverage: 0.3, strength: 0.6 },
     },
     build() {
       const r = theropod('oviraptor', {
@@ -366,6 +492,7 @@ export const theropodsSmall: CreatureDef[] = [
       h.box([-0.5, r.a.jawY + 1, cz - 2], [1, r.a.headTop - r.a.jawY + 1, 2], 'accent');
       wingFeathers(r, { len: 6, h: 5, spread: 1 });
       F.tailFan(r, { w: 6, len: 5, mat: 'quill' });
+      sculpt(r, { thighs: 1, flow: true, toes: true, fingers: 3, fluff: true });
       return r;
     },
   },
@@ -408,6 +535,7 @@ export const theropodsSmall: CreatureDef[] = [
         b.box([px - 2, py - 8, pz + 1], [1, 7, 6], 'feather');
       }
       backFluff(r, { h: 2 });
+      sculpt(r, { thighs: 2, flow: true, toes: true, fluff: true });
       return r;
     },
   },
@@ -450,6 +578,7 @@ export const theropodsSmall: CreatureDef[] = [
         const [, py, pz] = b.pivot;
         b.box([-2.5, py, pz], [5, 0, 4], 'quill');
       }
+      sculpt(r, { toes: true, fluff: true });
       return r;
     },
   },
@@ -478,7 +607,7 @@ export const theropodsSmall: CreatureDef[] = [
         body: { len: 22, w: 8, h: 10, chest: 2, tilt: -5 },
         neck: { len: 10, w: 5, h: 6, angle: 32, segments: 2 },
         head: { len: 6, w: 6, h: 6, snoutLen: 7, snoutW: 4, snoutH: 4, jawH: 2 },
-        tail: { len: 32, segments: 5, lift: 3, w: 6, h: 6, tipW: 1, tipH: 1 },
+        tail: { len: 34, segments: 6, lift: 2, w: 7, h: 8, tipW: 2, tipH: 2 },
         arms: { len: 7, w: 2, angle: -35 },
         legs: { thighW: 6, shinW: 3, footLen: 6, footW: 4 },
       });
@@ -490,6 +619,7 @@ export const theropodsSmall: CreatureDef[] = [
         h.box([x, r.a.headTop + 1, r.a.snoutTip + 4], [1, 2, 8], 'accent');
         h.box([x, r.a.headTop + 3, r.a.snoutTip + 6], [1, 1, 4], 'accent');
       }
+      sculpt(r, { brow: 1, cheeks: true, thighs: 2, flow: true, toes: true, fingers: 3 });
       return r;
     },
   },

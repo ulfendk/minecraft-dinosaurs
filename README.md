@@ -14,7 +14,7 @@ A Minecraft **Bedrock** add-on with **50 dinosaurs**, **12 other prehistoric cre
 | **Other prehistoric animals (12)** | Sarcosuchus, Megalodon, Pteranodon, Pterodactylus, Quetzalcoatlus, Dimorphodon, Mosasaurus, Plesiosaurus, Ichthyosaurus, Dunkleosteus, Dimetrodon, Titanoboa |
 | **Plants** | Prehistoric fern, horsetail, cycad, club moss, Williamsonia, ancient magnolia |
 | **Trees** | Ginkgo biloba, Araucaria (monkey puzzle), dawn redwood, Lepidodendron (scale tree), tree fern. Each has a log, planks, leaves and a sapling, and grows into one of three shapes. |
-| **Park gear** | Electric fence + fence generator, safari truck, park tour car, gyrosphere |
+| **Park gear** | Electric fence + fence generator, safari truck, park tour car, gyrosphere (full-size: seats fit a player), electric prod, tranquilizer rifle + darts |
 | **Other** | Fossil blocks, amber ore (with a rare mosquito in amber), dino meat, hide, feathers, scutes, megalodon tooth, creature eggs, and an in-game **Dino Field Guide** |
 
 ### Taming and riding
@@ -25,6 +25,11 @@ A Minecraft **Bedrock** add-on with **50 dinosaurs**, **12 other prehistoric cre
   - Land: T. rex, Triceratops, Stegosaurus, Ankylosaurus, Brachiosaurus (3 seats), Parasaurolophus, Gallimimus and more.
   - Air: Pteranodon, Quetzalcoatlus. Look where you want to fly.
   - Water: Mosasaurus, Plesiosaurus, Ichthyosaurus.
+
+### Ranger gear
+
+- **Electric prod:** hit a creature to shock it. The shock stuns, slows and pushes it back.
+- **Tranquilizer rifle:** shoots tranquilizer darts, which are crafted from 4 arrows and a fermented spider eye. One dart knocks out a small animal for 45 seconds. Big herbivores need 3 darts and big carnivores 4. A knocked-out creature lies down.
 
 ### Electric fences
 

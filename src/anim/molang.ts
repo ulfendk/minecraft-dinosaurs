@@ -21,6 +21,8 @@ const MATH: Record<string, (...a: number[]) => number> = {
 export function compile(expr: string | number): (env: Env) => number {
   if (typeof expr === 'number') return () => expr;
   let js = expr
+    // query.property('ns:name') → a named entry in the query env
+    .replace(/\b(?:query|q)\.property\(\s*'([^']+)'\s*\)/gi, (_, n) => `(E.q[${JSON.stringify('property:' + n)}] ?? 0)`)
     .replace(/\bmath\.([a-z_]+)/gi, (_, f) => `M.${f.toLowerCase()}`)
     .replace(/\b(query|q)\.([a-z_]+)/gi, (_, __, n) => `(E.q.${n.toLowerCase()} ?? 0)`)
     .replace(/\b(variable|v)\.([a-z_]+)/gi, (_, __, n) => `E.v.${n.toLowerCase()}`);

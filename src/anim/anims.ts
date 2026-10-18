@@ -82,7 +82,7 @@ export function buildAnimations(id: string, rig: Rig, scale: number): AnimSet {
         sit[leg.chain[1]] = { rotation: [92, 0, 0] };
         sit[leg.chain[2]] = { rotation: [-44, 0, 0] };
       }
-      add('sit', sit, 'query.is_sitting');
+      add('sit', sit, "query.is_sitting || query.property('dino:sedated')");
       break;
     }
     case 'quadruped': {
@@ -106,7 +106,7 @@ export function buildAnimations(id: string, rig: Rig, scale: number): AnimSet {
         sit[leg.chain[0]] = { rotation: [leg.front ? 70 : -60, 0, 0] };
         sit[leg.chain[1]] = { rotation: [leg.front ? -120 : 110, 0, 0] };
       }
-      add('sit', sit, 'query.is_sitting');
+      add('sit', sit, "query.is_sitting || query.property('dino:sedated')");
       break;
     }
     case 'pterosaur': {
@@ -114,16 +114,19 @@ export function buildAnimations(id: string, rig: Rig, scale: number): AnimSet {
       const fly: Record<string, BoneAnim> = {};
       for (const w of rig.wings) {
         const sg = w.side > 0 ? 1 : -1;
-        ground[w.name] = { rotation: [0, -80 * sg, -80 * sg] };
+        // on the ground pterosaurs walk on all fours: the folded wing becomes a front leg
+        ground[w.name] = { rotation: [40, 0, 80 * sg] };
         if (w.tip) ground[w.tip] = { rotation: [0, 165 * sg, 0], scale: 0.3 };
         fly[w.name] = { rotation: [0, 0, `${-sg} * (math.sin(variable.lt * 300) * 32 + 4)`] };
         if (w.tip) fly[w.tip] = { rotation: [0, 0, `${-sg} * math.sin(variable.lt * 300 - 50) * 18`] };
       }
       const walk: Record<string, BoneAnim> = {};
       for (const leg of rig.legs) walk[leg.name] = { rotation: [`${leg.side > 0 ? '' : '-'}variable.c * 25 * variable.gait`, 0, 0] };
+      for (const w of rig.wings) walk[w.name] = { rotation: [`${w.side > 0 ? '-' : ''}variable.c * 18 * variable.gait`, 0, 0] };
       for (const leg of rig.legs) fly[leg.name] = { rotation: [65, 0, 0] };
       if (rig.neck[0]) fly[rig.neck[0]] = { rotation: [10, 0, 0] };
       fly.body = { rotation: [10, 0, 0], position: [0, 'math.sin(variable.lt * 300 + 90) * 0.6', 0] };
+      ground.body = { rotation: [-20, 0, 0] };
       add('ground', ground, 'query.is_on_ground');
       add('walk', walk, 'query.is_on_ground');
       add('fly', fly, '!query.is_on_ground');

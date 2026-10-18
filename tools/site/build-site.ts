@@ -12,6 +12,7 @@ import { VEHICLES } from '../../src/data/park.js';
 import { DA_INFO, DA_NAMES, DA_PLANT_INFO, DA_TERMS } from '../../src/data/i18n/da.js';
 import { MIN_ENGINE } from '../../src/emit/bedrock/constants.js';
 import { buildItems } from '../../src/emit/bedrock/items.js';
+import { GEAR_ICONS } from '../../src/emit/bedrock/gear.js';
 import { vehicleAssets } from '../../src/emit/bedrock/vehicles.js';
 import { buildBlocks } from '../../src/emit/bedrock/blocks.js';
 import { toGeoJson } from '../../src/model/geo.js';
@@ -50,6 +51,7 @@ for (const t of TREES) save(`tree_${t.id}.png`, upscale(blockTex.get(`dino_${t.i
 save('fence.png', upscale(blockTex.get('dino_electric_fence_on')!, 4));
 save('generator.png', upscale(blockTex.get('dino_generator_side_on')!, 4));
 fs.copyFileSync(path.resolve('packs/static/pack_icon.png'), path.join(IMG, 'icon.png'));
+for (const [id, f] of Object.entries(GEAR_ICONS)) save(`gear_${id}.png`, upscale(f(), 4));
 
 // ---------------------------------------------------------------- text
 
@@ -91,7 +93,7 @@ const T = {
       [`${count} creatures`, 'Each creature has its own model, texture and animations: walking, swimming, flying, attacking and lying down.'],
       ['Tame and ride', 'Tame creatures with their favourite food, or hatch apex predators from eggs. Saddle them to ride on land, through the air or underwater.'],
       ['Prehistoric Jungle', 'A new biome full of ginkgo, monkey-puzzle, dawn redwood, scale trees and tree ferns. Without experiments, the plants and creatures appear in vanilla biomes instead.'],
-      ['Park gear', 'Electric fences shock anything that touches them once a generator powers them, and big carnivores smash through fences with no power. Drive a safari truck, a tour car or a gyrosphere.'],
+      ['Park gear', 'Electric fences shock anything that touches them once a generator powers them, and big carnivores smash through fences with no power. Drive a safari truck, a tour car or a gyrosphere, and keep animals in check with an electric prod or a tranquilizer rifle.'],
       ['Fossils and amber', 'Mine fossil blocks and amber ore, and look for the rare mosquito in amber.'],
       ['Field guide', 'An in-game book with facts about every species and how to tame and ride it.'],
     ],
@@ -116,6 +118,8 @@ const T = {
     generator: ['Fence Generator', 'Right-click it or give it a redstone signal to power every fence connected to it.'],
     amber: ['Mosquito in Amber', 'A rare find in amber ore.'],
     guide: ['Dino Field Guide', 'Facts plus taming and riding tips for every species.'],
+    prod: ['Electric Prod', 'Shocks, slows and pushes back whatever you hit.'],
+    rifle: ['Tranquilizer Rifle', 'Fires tranquilizer darts. One dart knocks out a small animal; big herbivores need 3 darts and big carnivores 4.'],
     footer: 'Prehistoric Dinosaurs is an open-source fan project, not affiliated with Mojang or Microsoft. All models and textures are generated from code in the repository.',
     sourceCode: 'Source code',
     licence: 'MIT licence',
@@ -135,7 +139,7 @@ const T = {
       [`${count} dyr`, 'Hvert dyr har sin egen model, tekstur og animationer: gang, svømning, flyvning, angreb og hvile.'],
       ['Tæm og rid', 'Tæm dyrene med deres yndlingsføde, eller klæk toprovdyr fra æg. Sæt en sadel på og rid over land, gennem luften eller under vandet.'],
       ['Forhistorisk jungle', 'Et nyt biom fuld af tempeltræer, abeskræk, vandgran, skæltræer og træbregner. Uden eksperimenter dukker planterne og dyrene op i de almindelige biomer i stedet.'],
-      ['Parkudstyr', 'Elektriske hegn giver stød til alt, der rører dem, når en generator forsyner dem med strøm, og store kødædere smadrer hegn uden strøm. Kør i safarivogn, turbil eller gyrosfære.'],
+      ['Parkudstyr', 'Elektriske hegn giver stød til alt, der rører dem, når en generator forsyner dem med strøm, og store kødædere smadrer hegn uden strøm. Kør i safarivogn, turbil eller gyrosfære, og hold dyrene i skak med en elektrisk stav eller et bedøvelsesgevær.'],
       ['Fossiler og rav', 'Bryd fossilblokke og ravmalm, og led efter den sjældne myg i rav.'],
       ['Felthåndbog', 'En bog i spillet med fakta om alle arter, og hvordan du tæmmer og rider på dem.'],
     ],
@@ -160,6 +164,8 @@ const T = {
     generator: ['Hegnsgenerator', 'Højreklik på den eller giv den et redstone-signal for at sætte strøm til alle hegn, der er forbundet med den.'],
     amber: ['Myg i rav', 'Et sjældent fund i ravmalm.'],
     guide: ['Dino-felthåndbog', 'Fakta samt tips til at tæmme og ride på alle arter.'],
+    prod: ['Elektrisk stav', 'Giver stød, gør langsom og skubber det, du rammer, tilbage.'],
+    rifle: ['Bedøvelsesgevær', 'Skyder bedøvelsespile. Én pil bedøver et lille dyr; store planteædere kræver 3 pile og store kødædere 4.'],
     footer: 'Forhistoriske Dinosaurer er et open source-fanprojekt uden tilknytning til Mojang eller Microsoft. Alle modeller og teksturer er genereret af kode i repositoriet.',
     sourceCode: 'Kildekode',
     licence: 'MIT-licens',
@@ -249,7 +255,7 @@ ${t.steps.map((s) => `<li>${s}</li>`).join('\n')}
 ${sections}
 <section><h2>${t.plants}</h2><div class="minis">${PLANTS.map((p) => small(`plant_${p.id}.png`, name(lang, p.id, p.name), info(lang, p.id, p.info))).join('')}${TREES.map((tr) => small(`tree_${tr.id}.png`, name(lang, tr.id, tr.name), info(lang, tr.id, tr.info))).join('')}</div></section>
 <section><h2>${t.park}</h2><div class="vehicles">${VEHICLES.map((v) => `<article class="card"><img loading="lazy" src="${img(`${v.id}.png`)}" alt="${esc(name(lang, v.id, v.name))}" width="320" height="320"><div><h3>${esc(name(lang, v.id, v.name))}</h3><p>${esc(info(lang, v.id, v.info))}</p></div></article>`).join('')}</div>
-<div class="minis" style="margin-top:14px">${small('fence.png', t.fence[0], t.fence[1])}${small('generator.png', t.generator[0], t.generator[1])}${small('item_amber_mosquito.png', t.amber[0], t.amber[1])}${small('item_field_guide.png', t.guide[0], t.guide[1])}</div></section>
+<div class="minis" style="margin-top:14px">${small('fence.png', t.fence[0], t.fence[1])}${small('generator.png', t.generator[0], t.generator[1])}${small('item_amber_mosquito.png', t.amber[0], t.amber[1])}${small('item_field_guide.png', t.guide[0], t.guide[1])}${small('gear_electric_prod.png', t.prod[0], t.prod[1])}${small('gear_tranquilizer_rifle.png', t.rifle[0], t.rifle[1])}</div></section>
 </main>
 <footer class="wrap">${t.footer} <a href="https://github.com/${REPO}">${t.sourceCode}</a> · ${t.licence}.</footer>
 </body>
