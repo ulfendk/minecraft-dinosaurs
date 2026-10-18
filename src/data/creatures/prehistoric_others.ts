@@ -439,9 +439,9 @@ export const prehistoricOthers: CreatureDef[] = [
     build() {
       const r = pterosaur('dimorphodon', {
         bodyY: 10,
-        body: { len: 8, w: 5, h: 5 },
+        body: { len: 9, w: 5, h: 5 },
         neck: { len: 4, w: 3, h: 3, angle: 30, segments: 1 },
-        head: { len: 5, w: 5, h: 7, snoutLen: 5, snoutW: 4, snoutH: 5, jawH: 2, eyeR: 1 },
+        head: { len: 4, w: 4, h: 5, snoutLen: 4, snoutW: 3, snoutH: 4, jawH: 2, eyeR: 0.9 },
         wing: { span: 24, chord: 7, armW: 2 },
         legs: { len: 7, w: 2 },
         tail: { len: 16, vane: true },

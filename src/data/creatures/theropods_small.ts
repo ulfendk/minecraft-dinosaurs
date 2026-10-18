@@ -429,8 +429,8 @@ export const theropodsSmall: CreatureDef[] = [
     prey: true,
     group: 'bird',
     palette: {
-      back: '#2a2622', side: '#5a4c40', belly: '#ddd0b8', accent: '#141416', accent2: '#c8beb0', eye: '#f0b020',
-      pattern: { type: 'stripes', colour: '#1a1714', scale: 2, coverage: 0.25, strength: 0.5 }, teeth: true,
+      back: '#3b3027', side: '#7a6450', belly: '#e8dcc4', accent: '#23262f', accent2: '#d6c9ae', eye: '#f0b020',
+      pattern: { type: 'stripes', colour: '#2a221c', scale: 2, coverage: 0.25, strength: 0.5 }, teeth: true,
     },
     build() {
       const r = theropod('archaeopteryx', {
