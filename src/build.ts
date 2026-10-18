@@ -9,6 +9,8 @@ import { behaviorEntity } from './emit/bedrock/entity.js';
 import { bpManifest, packVersion, rpManifest } from './emit/bedrock/manifest.js';
 import { emitWorld } from './emit/bedrock/world.js';
 import { toGeoJson } from './model/geo.js';
+import { danishLang, guideLang } from './data/i18n/game.js';
+import { PLANTS, TREES } from './data/plants.js';
 import { clean, OutDir } from './emit/writer.js';
 
 export const BUILD = path.resolve('build');
@@ -50,10 +52,14 @@ export async function build(opts: { quiet?: boolean } = {}) {
   bp.json('manifest.json', bpManifest());
   rp.json('manifest.json', rpManifest());
   rp.json('sounds.json', { entity_sounds: { entities: sounds } });
-  rp.write('texts/en_US.lang', lang.join('\n') + '\n');
-  rp.json('texts/languages.json', ['en_US']);
+  const plants = [...PLANTS, ...TREES];
+  const creatures = CREATURES.map((c) => ({ id: c.id, info: c.info }));
+  rp.write('texts/en_US.lang', [...lang, ...guideLang('en_US', creatures, plants)].join('\n') + '\n');
+  rp.write('texts/da_DK.lang', [...danishLang(lang), ...guideLang('da_DK', creatures, plants)].join('\n') + '\n');
+  rp.json('texts/languages.json', ['en_US', 'da_DK']);
   bp.write('texts/en_US.lang', `pack.name=Prehistoric Dinosaurs BP v${packVersion().join('.')}\npack.description=Dinosaurs and prehistoric life\n`);
-  bp.json('texts/languages.json', ['en_US']);
+  bp.write('texts/da_DK.lang', `pack.name=Prehistoric Dinosaurs BP v${packVersion().join('.')}\npack.description=Dinosaurer og forhistorisk liv\n`);
+  bp.json('texts/languages.json', ['en_US', 'da_DK']);
   if (!opts.quiet) console.log(`built ${assembled.length} creatures, ${bp.files.length} BP files, ${rp.files.length} RP files`);
   return { bp, rp, assembled };
 }

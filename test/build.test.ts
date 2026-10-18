@@ -186,6 +186,16 @@ describe('cross references', () => {
     for (const b of blocks) expect(lang.has(`tile.${b}.name`), b).toBe(true);
   });
 
+  it('Danish lang file covers exactly the same keys as English, and every script text key exists', () => {
+    const keys = (f: string) => fs.readFileSync(path.join(RP_DIR, 'texts', f), 'utf8').split('\n').filter(Boolean).map((l) => l.split('=')[0]);
+    const en = keys('en_US.lang');
+    const da = keys('da_DK.lang');
+    expect(new Set(da)).toEqual(new Set(en));
+    expect(readJson(path.join(RP_DIR, 'texts/languages.json'))).toContain('da_DK');
+    const js = fs.readFileSync(path.join(BP_DIR, 'scripts/main.js'), 'utf8');
+    for (const m of js.matchAll(/tr\(\s*"([a-z_.0-9]+)"/g)) expect(en, m[1]).toContain(`dino.ui.${m[1]}`);
+  });
+
   it('all Molang expressions parse', () => {
     const exprs: string[] = [];
     for (const f of walk(path.join(RP_DIR, 'animations'))) JSON.stringify(readJson(f), (_k, v) => (typeof v === 'string' && /query|variable|math/.test(v) ? exprs.push(v) : 0, v));

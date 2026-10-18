@@ -3,7 +3,7 @@
 // - electric fences powered by fence generators (redstone or a right-click toggle)
 // - egg hatching into a tame baby for whoever placed the egg
 // - Dino Field Guide UI and a welcome gift
-import { Block, Dimension, EntityDamageCause, GameMode, ItemStack, Player, system, world, type Entity, type Vector3 } from '@minecraft/server';
+import { Block, Dimension, EntityDamageCause, GameMode, ItemStack, Player, system, world, type Entity, type RawMessage, type Vector3 } from '@minecraft/server';
 import { ActionFormData, MessageFormData } from '@minecraft/server-ui';
 import type { GuideData } from './data.js';
 
@@ -160,7 +160,7 @@ system.beforeEvents.startup.subscribe(({ blockComponentRegistry }) => {
     onPlayerInteract({ block, player }) {
       const on = block.permutation.getState('dino:on' as never) !== 'on';
       setGenerator(block, on);
-      player?.onScreenDisplay.setActionBar(on ? '§eFence power: §aON' : '§eFence power: §cOFF');
+      player?.onScreenDisplay.setActionBar(tr(on ? 'msg.fence_on' : 'msg.fence_off'));
     },
     onRedstoneUpdate({ block, powerLevel, previousPowerLevel }) {
       if ((powerLevel > 0) !== (previousPowerLevel > 0)) setGenerator(block, powerLevel > 0);
@@ -250,40 +250,41 @@ world.afterEvents.dataDrivenEntityTrigger.subscribe(({ entity, eventId }) => {
     system.run(() => {
       if (!baby.isValid) return;
       baby.getComponent('minecraft:tameable')?.tame(owner);
-      const name = DATA.creatures.find((c) => c.id === species)?.name ?? species;
-      owner.sendMessage(`§aYour ${name} egg hatched!`);
+      owner.sendMessage(tr('msg.hatched', [{ translate: `entity.${NS}:${species}.name` }]));
     });
 });
 
 // ---------------------------------------------------------------- field guide
+// All text comes from the resource pack lang files (en_US, da_DK) so it follows the player's language.
 
+const tr = (key: string, with_: (RawMessage | string)[] = []): RawMessage => ({
+  translate: `dino.ui.${key}`,
+  with: { rawtext: with_.map((w) => (typeof w === 'string' ? { text: w } : w)) },
+});
+const t = (translate: string): RawMessage => ({ translate });
+const txt = (text: string): RawMessage => ({ text });
+const lines = (...parts: RawMessage[]): RawMessage => ({ rawtext: parts });
+const NL = txt('\n');
 const PERIOD_ORDER = ['Devonian', 'Permian', 'Triassic', 'Jurassic', 'Cretaceous', 'Paleogene', 'Neogene'];
-const GROUP_NAMES: Record<string, string> = {
-  theropod: 'Theropods (meat-eaters)',
-  sauropod: 'Sauropods (long-necks)',
-  ornithopod: 'Ornithopods & duck-bills',
-  ceratopsian: 'Horned dinosaurs',
-  thyreophoran: 'Armoured & plated',
-  pterosaur: 'Pterosaurs (flyers)',
-  marine_reptile: 'Marine reptiles',
-  fish: 'Prehistoric fish',
-  crocodilian: 'Crocodilians',
-  snake: 'Snakes',
-  synapsid: 'Synapsids',
-  bird: 'Early birds',
-};
 
 function creaturePage(player: Player, id: string, back: () => void) {
   const c = DATA.creatures.find((x) => x.id === id);
   if (!c) return;
-  const tame = c.tame === 'egg' ? 'Only hatchlings: find an egg and place it.' : c.tame === 'feed' ? 'Feed it its favourite food.' : 'Cannot be tamed.';
-  const ride = c.ride ? `Rideable (${c.ride === 'ground' ? 'on land' : c.ride === 'fly' ? 'flying' : 'swimming'}${c.seats > 1 ? `, ${c.seats} seats` : ''}) once tamed and saddled.` : 'Not rideable.';
-  const body = [`§l${c.name}§r`, `§7${c.period} · ${c.lengthM} m · ${c.diet}§r`, '', c.info, '', `§6Temperament:§r ${c.temperament}`, `§6Taming:§r ${tame}`, `§6Riding:§r ${ride}`].join('\n');
+  const name = t(`entity.${NS}:${c.id}.name`);
+  const ride = c.ride ? lines(tr(`ride.${c.ride}`), ...(c.seats > 1 ? [tr('ride.seats', [String(c.seats)])] : [])) : tr('ride.no');
+  const body = lines(
+    txt('§l'), name, txt('§r'), NL,
+    txt('§7'), t(`dino.term.${c.period}`), txt(` · ${c.lengthM} m · `), t(`dino.term.${c.diet}`), txt('§r'), NL, NL,
+    t(`dino.info.${c.id}`), NL, NL,
+    txt('§6'), tr('page.temperament'), txt('§r '), t(`dino.term.${c.temperament}`), NL,
+    txt('§6'), tr('page.taming'), txt('§r '), tr(`tame.${c.tame}`), NL,
+    txt('§6'), tr('page.riding'), txt('§r '), ride,
+  );
   new MessageFormData()
-    .title(c.name)
+    .title(name)
     .body(body)
-    .button1('Back')
-    .button2('Close')
+    .button1(tr('guide.back'))
+    .button2(tr('guide.close'))
     .show(player)
     .then((r) => {
       if (r.selection === 0) back();
@@ -292,53 +293,38 @@ function creaturePage(player: Player, id: string, back: () => void) {
 
 function groupPage(player: Player, group: string) {
   const list = DATA.creatures.filter((c) => c.group === group).sort((a, b) => PERIOD_ORDER.indexOf(a.period) - PERIOD_ORDER.indexOf(b.period) || a.name.localeCompare(b.name));
-  const form = new ActionFormData().title(GROUP_NAMES[group] ?? group).body(`${list.length} species`);
-  for (const c of list) form.button(`${c.name}\n§8${c.period}`);
+  const form = new ActionFormData().title(t(`dino.group.${group}`)).body(tr('guide.species', [String(list.length)]));
+  for (const c of list) form.button(lines(t(`entity.${NS}:${c.id}.name`), txt('\n§8'), t(`dino.term.${c.period}`)));
   form.show(player).then((r) => {
     if (r.canceled || r.selection === undefined) return showGuide(player);
     creaturePage(player, list[r.selection].id, () => groupPage(player, group));
   });
 }
 
-function textPage(player: Player, title: string, body: string) {
-  new MessageFormData().title(title).body(body).button1('Back').button2('Close').show(player).then((r) => {
+function textPage(player: Player, title: RawMessage, body: RawMessage) {
+  new MessageFormData().title(title).body(body).button1(tr('guide.back')).button2(tr('guide.close')).show(player).then((r) => {
     if (r.selection === 0) showGuide(player);
   });
 }
 
 function showGuide(player: Player) {
   const groups = [...new Set(DATA.creatures.map((c) => c.group))];
-  const form = new ActionFormData().title(`Dino Field Guide v${DATA.version}`).body(`§7${DATA.creatures.length} prehistoric creatures, ancient plants and park gear.`);
-  for (const g of groups) form.button(GROUP_NAMES[g] ?? g);
-  form.button('Ancient plants & trees');
-  form.button('Taming, riding & eggs');
-  form.button('Park gear: fences & vehicles');
+  const form = new ActionFormData().title(tr('guide.title', [DATA.version])).body(lines(txt('§7'), tr('guide.body', [String(DATA.creatures.length)])));
+  for (const g of groups) form.button(t(`dino.group.${g}`));
+  form.button(tr('guide.plants'));
+  form.button(tr('guide.taming'));
+  form.button(tr('guide.park'));
   form.show(player).then((r) => {
     if (r.canceled || r.selection === undefined) return;
     if (r.selection < groups.length) return groupPage(player, groups[r.selection]);
     const extra = r.selection - groups.length;
-    if (extra === 0)
-      return textPage(player, 'Ancient plants', [...DATA.plants, ...DATA.trees].map((p) => `§a${p.name}§r\n${p.info}`).join('\n\n') + '\n\nSaplings grow on their own or with bone meal.');
-    if (extra === 1)
-      return textPage(
-        player,
-        'Taming, riding & eggs',
-        [
-          '§6Taming:§r hold a creature\'s favourite food (meat for carnivores, ferns, ginkgo nuts or cycad cones for herbivores, fish for sea and flying reptiles) and feed it until hearts appear.',
-          '§6Apex predators§r such as T. rex can only be tamed as hatchlings. Adults lay eggs now and then: pick one up and place it, and the baby hatches tame for you after a few minutes.',
-          '§6Riding:§r saddle a tamed adult of a rideable species (craft saddles from dino hide). Use WASD on land, look and move to fly or swim. Sneak to dismount; use shears to take the saddle off.',
-          '§6Sitting:§r interact with a tamed creature to make it sit or follow.',
-        ].join('\n\n'),
-      );
-    return textPage(
-      player,
-      'Park gear',
-      [
-        '§eElectric fence:§r one and a half blocks tall, so creatures cannot step over it, and it links up with its neighbours. Place a §eFence Generator§r touching the fence and switch it on (right-click, or power it with redstone). Powered fences shock anything that touches them.',
-        'Big carnivores will smash through fences that have no power!',
-        '§eVehicles:§r the Safari Truck and the Tour Car seat four, and the Gyrosphere seats two. Place them, climb in and drive with WASD. Hit one to pick it back up.',
-      ].join('\n\n'),
-    );
+    if (extra === 0) {
+      const parts: RawMessage[] = [];
+      for (const p of [...DATA.plants, ...DATA.trees]) parts.push(txt('§a'), t(`dino.plant.${p.id}.name`), txt('§r\n'), t(`dino.plant.${p.id}.info`), NL, NL);
+      return textPage(player, tr('guide.plants'), lines(...parts, tr('guide.saplings')));
+    }
+    if (extra === 1) return textPage(player, tr('guide.taming'), lines(tr('help.taming1'), NL, NL, tr('help.taming2'), NL, NL, tr('help.taming3'), NL, NL, tr('help.taming4')));
+    return textPage(player, tr('guide.park'), lines(tr('help.park1'), NL, NL, tr('help.park2'), NL, NL, tr('help.park3')));
   });
 }
 
@@ -351,6 +337,6 @@ world.afterEvents.playerSpawn.subscribe(({ player, initialSpawn }) => {
   player.addTag('dino_welcomed');
   system.runTimeout(() => {
     player.getComponent('minecraft:inventory')?.container?.addItem(new ItemStack(`${NS}:field_guide`, 1));
-    player.sendMessage('§6[Prehistoric Dinosaurs]§r You received a §aDino Field Guide§r. Use it to learn about every creature!');
+    player.sendMessage(tr('msg.welcome'));
   }, 60);
 });
