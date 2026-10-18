@@ -20,7 +20,7 @@ public class GearScreenshotTest implements FabricClientGameTest {
 	public void runTest(ClientGameTestContext context) {
 		try (TestSingleplayerContext world = context.worldBuilder().create()) {
 			var server = world.getServer();
-			for (String cmd : new String[] { "gamerule doDaylightCycle false", "gamerule doMobSpawning false", "time set noon", "weather clear", "gamerule sendCommandFeedback false" })
+			for (String cmd : new String[] { "gamerule advance_time false", "gamerule spawn_mobs false", "time set noon", "weather clear", "gamerule send_command_feedback false" })
 				server.runCommand(cmd);
 			context.runOnClient(mc -> { if (!mc.gui.hud.isHidden()) mc.gui.hud.toggle(); });
 			context.waitTicks(20);

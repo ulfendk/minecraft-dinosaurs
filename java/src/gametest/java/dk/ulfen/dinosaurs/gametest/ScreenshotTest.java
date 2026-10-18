@@ -14,12 +14,12 @@ public class ScreenshotTest implements FabricClientGameTest {
 	public void runTest(ClientGameTestContext context) {
 		try (TestSingleplayerContext world = context.worldBuilder().create()) {
 			var server = world.getServer();
-			server.runCommand("gamerule doDaylightCycle false");
-			server.runCommand("gamerule doMobSpawning false");
+			server.runCommand("gamerule advance_time false");
+			server.runCommand("gamerule spawn_mobs false");
 			server.runCommand("time set noon");
 			server.runCommand("weather clear");
 			server.runCommand("gamemode spectator @a");
-			server.runCommand("gamerule sendCommandFeedback false");
+			server.runCommand("gamerule send_command_feedback false");
 			context.runOnClient(mc -> { if (!mc.gui.hud.isHidden()) mc.gui.hud.toggle(); });
 			context.waitTicks(40);
 			String only = System.getenv().getOrDefault("DINO_ONLY", "");

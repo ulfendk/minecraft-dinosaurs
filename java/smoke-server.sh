@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Starts the Fabric dev server, summons every creature + egg, places eggs, then stops.
 set -u
-cd "$(dirname "$0")"
 J="$(cd "$(dirname "$0")" && pwd)"
+cd "$J"
 LOG=$J/run/smoke.log
 mkdir -p $J/run && echo "eula=true" > $J/run/eula.txt
 printf 'online-mode=false\nlevel-type=minecraft\\:flat\nspawn-protection=0\nview-distance=4\nsimulation-distance=4\n' > $J/run/server.properties
@@ -11,6 +11,8 @@ FIFO=$(mktemp -u); mkfifo $FIFO
 ( cd $J && ./gradlew --no-daemon runServer --args="nogui" < $FIFO > $LOG 2>&1 ) &
 exec 3>$FIFO
 for i in $(seq 1 240); do grep -q "Done (" $LOG 2>/dev/null && break; grep -q "BUILD FAILED\|Exception in thread" $LOG && break; sleep 2; done
+echo "forceload add -16 -16 80 80" >&3
+sleep 3
 ids=$(python3 -c "import json;print(' '.join(c['id'] for c in json.load(open('$J/src/generated/resources/dinosaurs/creatures.json'))))")
 i=0; for id in $ids; do echo "summon dinosaurs:$id $(( (i%10)*6 )) -60 $(( i/10*6 ))" >&3; i=$((i+1)); sleep 0.1; done
 echo "summon dinosaurs:egg 0 -60 70" >&3
