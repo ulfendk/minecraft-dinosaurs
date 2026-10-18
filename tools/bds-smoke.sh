@@ -41,6 +41,7 @@ feats.forEach((f, i) => cmds.push(`place feature ${f} ${(i % 4) * 10} 100 ${Math
 fs.writeFileSync(".cache/bds/commands.txt", cmds.join("\n") + "\n");
 '
 docker exec dino-bds send-command "tickingarea add circle 16 0 16 3 smoke true" >/dev/null 2>&1 || true
+echo "== console check:"; docker exec dino-bds send-command "list" 2>&1 | tail -5 || true; docker exec dino-bds sh -c 'id; ls -la /data | head -5' 2>&1 | tail -6
 # wait until the ticking area is loaded (a probe summon succeeds)
 for i in $(seq 1 60); do
   sleep 3
