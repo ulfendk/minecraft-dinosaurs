@@ -8,3 +8,4 @@ node_modules/
 /tools/scratch/
 /.cache/
 /docs/gallery/
+/.claude/

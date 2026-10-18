@@ -53,3 +53,37 @@ jobs:
             .cache/bds/server-output.log
             .cache/bds/problems.log
           if-no-files-found: ignore
+
+  # Java Edition (Fabric + GeckoLib): generate resources, compile, and run a dedicated
+  # Fabric server that summons every creature.
+  java:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 25
+      - uses: gradle/actions/setup-gradle@v4
+      - run: npm ci
+      - run: npm run build:java
+      - name: Build mod jar
+        working-directory: java
+        run: ./gradlew --no-daemon build
+      - name: Smoke test on a Fabric dedicated server
+        run: bash java/smoke-server.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: prehistoric-dinosaurs-fabric-${{ github.sha }}
+          path: java/build/libs/prehistoric-dinosaurs-fabric-*.jar
+          if-no-files-found: error
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: java-server-log
+          path: java/run/smoke.log
+          if-no-files-found: ignore

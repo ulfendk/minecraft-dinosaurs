@@ -1,6 +1,6 @@
 # Prehistoric Dinosaurs
 
-A Minecraft **Bedrock** add-on with **50 dinosaurs**, **12 other prehistoric creatures**, ancient plants, a **Prehistoric Jungle** biome, tameable and rideable dinosaurs, **electric fences** and **safari vehicles**. Every model, texture, animation and pack file is generated from code in this repository. The data model is engine-neutral so a Java edition port can reuse it (see [Java support](#java-support)).
+A Minecraft mod for **Bedrock** and **Java** (Fabric) with **50 dinosaurs**, **12 other prehistoric creatures**, ancient plants, a **Prehistoric Jungle** biome, tameable and rideable dinosaurs, **electric fences** and **safari vehicles**. Every model, texture, animation and pack file is generated from code in this repository. One set of definitions drives both editions (see [Java Edition](#java-edition)).
 
 **[Download the latest release](https://github.com/ulfendk/minecraft-dinosaurs/releases/latest)** · **[Creature catalogue (GitHub Pages)](https://ulfendk.github.io/minecraft-dinosaurs/)** · **[Dansk side](https://ulfendk.github.io/minecraft-dinosaurs/da/)**
 
@@ -81,13 +81,41 @@ To add a creature, add a `CreatureDef` to one of the files in `src/data/creature
 
 One-time setup: in the repository settings, go to **Pages** and set **Source** to **GitHub Actions**.
 
-## Java support
+## Java Edition
 
-This is planned, not built yet. The pipeline was designed so Java can reuse it:
+A Fabric mod for **Minecraft Java 26.3** is built from the same creature definitions as the Bedrock add-on. It needs:
+- [Fabric Loader](https://fabricmc.net/use/)
+- [Fabric API](https://modrinth.com/mod/fabric-api)
+- [GeckoLib](https://modrinth.com/mod/geckolib) 5.5+
 
-- **Models and animations:** the Bedrock geometry (`format_version 1.16.0`, box UV) is what GeckoLib loads on Fabric/NeoForge. Generated `.geo.json` and textures can be used unchanged.
-- **Behaviour data:** `CreatureDef` holds the data the Java entity classes need: stats, diet, temperament, taming, riding, spawn biomes and drops.
-- **Status:** `src/emit/java/` documents the planned emitter. It is not implemented yet.
+To install it, download `prehistoric-dinosaurs-fabric-<version>.jar` from [Releases](https://github.com/ulfendk/minecraft-dinosaurs/releases/latest) and put it in your `mods` folder.
+
+**What's the same as Bedrock:**
+- all 62 creatures with the same models, textures and animations
+- taming, sitting and saddles, and riding on land, in the air and underwater
+- breeding, egg laying and hatching
+- natural spawning
+- the items
+- plants and trees with world generation
+- fossils and amber
+- electric fences and the generator
+- the electric prod and tranquilizer rifle
+- the vehicles
+- English and Danish text
+
+**What's different:**
+- **No custom biome.** Fabric can't add biomes without extra libraries, so plants and creatures appear in vanilla biomes, as on Bedrock without the experiment.
+- **Field guide.** Use it on a creature to show that creature's entry.
+
+**How it's built:** `npm run build:java` writes the generated resources to `java/src/generated/resources`. The Java code in `java/src` is a set of small data-driven classes: one entity class that every creature uses, plus subsystems for blocks, gear and vehicles.
+
+```bash
+npm run build:java
+cd java
+./gradlew build             # → build/libs/prehistoric-dinosaurs-fabric-<version>.jar
+bash smoke-server.sh        # Fabric dedicated server: summons every creature
+./gradlew runClientGameTest # real game client: screenshots of every creature
+```
 
 ## License
 

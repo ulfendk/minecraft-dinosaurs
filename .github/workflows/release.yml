@@ -29,15 +29,31 @@ jobs:
         run: PACK_VERSION="${GITHUB_REF_NAME#v}" npm run package
       - name: Smoke test in Bedrock Dedicated Server
         run: bash tools/bds-smoke.sh 30
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 25
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Build Java Edition mod (Fabric)
+        run: |
+          npm run build:java
+          (cd java && PACK_VERSION="${GITHUB_REF_NAME#v}" ./gradlew --no-daemon build)
+          bash java/smoke-server.sh
+          cp java/build/libs/prehistoric-dinosaurs-fabric-${GITHUB_REF_NAME#v}.jar dist/
       - name: Write release notes
         run: |
           prev="$(git describe --tags --abbrev=0 "${GITHUB_REF_NAME}^" 2>/dev/null || true)"
           {
-            echo "## Install"
+            echo "## Install – Bedrock Edition"
             echo
             echo "1. Download **prehistoric-dinosaurs-${GITHUB_REF_NAME#v}.mcaddon** below and open it — Minecraft imports both packs."
             echo "2. Activate **Prehistoric Dinosaurs BP** on a world (the resource pack is added automatically)."
             echo "3. Optional: enable the **Custom Biomes** experiment for the Prehistoric Jungle biome."
+            echo
+            echo "## Install – Java Edition"
+            echo
+            echo "1. Install [Fabric Loader](https://fabricmc.net/use/) for Minecraft Java 26.3, plus [Fabric API](https://modrinth.com/mod/fabric-api) and [GeckoLib](https://modrinth.com/mod/geckolib) for 26.3."
+            echo "2. Put **prehistoric-dinosaurs-fabric-${GITHUB_REF_NAME#v}.jar** in your \`mods\` folder."
             echo
             min="$(npx tsx -e "import { MIN_ENGINE } from './src/emit/bedrock/constants.ts'; console.log(MIN_ENGINE.join('.'))")"
             echo "Requires Minecraft Bedrock ${min} or newer. Creature catalogue: https://${GITHUB_REPOSITORY_OWNER}.github.io/${GITHUB_REPOSITORY#*/}/"

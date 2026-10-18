@@ -22,5 +22,11 @@ echo "stop" >&3
 exec 3>&-
 wait
 rm -f $FIFO
-echo "== summoned: $(grep -c 'Summoned new' $LOG)"
-grep -n "ERROR\|Exception\|WARN.*dinosaurs\|Caused by" $LOG | head -30
+summoned=$(grep -c 'Summoned new' $LOG || true)
+expected=$(( $(echo $ids | wc -w) + 1 ))
+echo "== summoned: $summoned / $expected"
+problems=$(grep -n "Exception\|Caused by\|ERROR.*dinosaurs\|WARN.*dinosaurs" $LOG | grep -v "No key layers" || true)
+[ -n "$problems" ] && { echo "$problems" | head -30; exit 1; }
+grep -q "Done (" $LOG || { echo "server did not start"; tail -40 $LOG; exit 1; }
+[ "$summoned" -ge "$expected" ] || { echo "not every entity could be summoned"; exit 1; }
+echo "== java server smoke test passed"

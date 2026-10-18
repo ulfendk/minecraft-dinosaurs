@@ -75,6 +75,7 @@ const dinoCount = CREATURES.filter((c) => ['theropod', 'bird', 'sauropod', 'orni
 const others = count - dinoCount;
 const latest = `https://github.com/${REPO}/releases/latest`;
 const direct = VERSION ? `https://github.com/${REPO}/releases/download/v${VERSION}/prehistoric-dinosaurs-${VERSION}.mcaddon` : latest;
+const javaJar = VERSION ? `https://github.com/${REPO}/releases/download/v${VERSION}/prehistoric-dinosaurs-fabric-${VERSION}.jar` : latest;
 const minVersion = MIN_ENGINE.join('.');
 const file = `prehistoric-dinosaurs-${VERSION || '&lt;version&gt;'}.mcaddon`;
 
@@ -82,12 +83,13 @@ const T = {
   en: {
     title: 'Prehistoric Dinosaurs',
     description: `A Minecraft Bedrock add-on with ${dinoCount} dinosaurs, ${others} more prehistoric creatures, ancient plants, a prehistoric biome, electric fences and safari vehicles.`,
-    intro: `A Minecraft Bedrock add-on with <b>${dinoCount} dinosaurs</b> and <b>${others} more prehistoric creatures</b>: megalodon, mosasaurus, pterosaurs, Titanoboa and others. It also has ancient plants, a Prehistoric Jungle biome, tameable and rideable dinosaurs, electric fences and safari vehicles.`,
-    download: (v: string) => `Download ${v ? `v${v}` : 'latest'} (.mcaddon)`,
+    intro: `A Minecraft mod for Bedrock and Java with <b>${dinoCount} dinosaurs</b> and <b>${others} more prehistoric creatures</b>: megalodon, mosasaurus, pterosaurs, Titanoboa and others. It also has ancient plants, a Prehistoric Jungle biome, tameable and rideable dinosaurs, electric fences and safari vehicles.`,
+    download: (v: string) => `Bedrock ${v ? `v${v}` : ''} (.mcaddon)`,
+    javaDownload: (v: string) => `Java ${v ? `v${v}` : ''} (Fabric .jar)`,
     allReleases: 'All releases',
     source: 'Source on GitHub',
     version: (v: string) => (v ? `Latest version: <b>v${v}</b> · ` : ''),
-    requires: `Requires Minecraft Bedrock ${minVersion} or newer`,
+    requires: `Bedrock ${minVersion}+ · Java 26.3 with Fabric, Fabric API and GeckoLib`,
     features: 'Features',
     feats: [
       [`${count} creatures`, 'Each creature has its own model, texture and animations: walking, swimming, flying, attacking and lying down.'],
@@ -104,6 +106,7 @@ const T = {
       'Create or edit a world. Under <b>Behavior Packs</b>, activate <i>Prehistoric Dinosaurs BP</i> (the resource pack is added automatically).',
       'Optional: turn on the <b>Custom Biomes</b> experiment to get the Prehistoric Jungle biome. Everything else works without experiments.',
       'Your first time in the world, you get a <b>Dino Field Guide</b>.',
+      `<b>Java Edition:</b> install <a href="https://fabricmc.net/use/">Fabric Loader</a> for Minecraft 26.3, plus <a href="https://modrinth.com/mod/fabric-api">Fabric API</a> and <a href="https://modrinth.com/mod/geckolib">GeckoLib</a>. Then put <a href="${javaJar}"><code>prehistoric-dinosaurs-fabric-${VERSION || '&lt;version&gt;'}.jar</code></a> in your <code>mods</code> folder. The Prehistoric Jungle biome is Bedrock-only; on Java, the plants and creatures appear in vanilla biomes.`,
     ],
     tameEgg: 'Tame from egg',
     tameable: 'Tameable',
@@ -128,12 +131,13 @@ const T = {
   da: {
     title: 'Forhistoriske Dinosaurer',
     description: `En Minecraft Bedrock-tilføjelse med ${dinoCount} dinosaurer, ${others} andre forhistoriske dyr, oldtidsplanter, et forhistorisk biom, elektriske hegn og safarikøretøjer.`,
-    intro: `En Minecraft Bedrock-tilføjelse med <b>${dinoCount} dinosaurer</b> og <b>${others} andre forhistoriske dyr</b>: megalodon, mosasaurus, flyveøgler, Titanoboa og flere. Den har også oldtidsplanter, et forhistorisk junglebiom, dinosaurer du kan tæmme og ride på, elektriske hegn og safarikøretøjer.`,
-    download: (v: string) => `Hent ${v ? `v${v}` : 'nyeste'} (.mcaddon)`,
+    intro: `En Minecraft-mod til Bedrock og Java med <b>${dinoCount} dinosaurer</b> og <b>${others} andre forhistoriske dyr</b>: megalodon, mosasaurus, flyveøgler, Titanoboa og flere. Den har også oldtidsplanter, et forhistorisk junglebiom, dinosaurer du kan tæmme og ride på, elektriske hegn og safarikøretøjer.`,
+    download: (v: string) => `Bedrock ${v ? `v${v}` : ''} (.mcaddon)`,
+    javaDownload: (v: string) => `Java ${v ? `v${v}` : ''} (Fabric .jar)`,
     allReleases: 'Alle udgivelser',
     source: 'Kildekode på GitHub',
     version: (v: string) => (v ? `Nyeste version: <b>v${v}</b> · ` : ''),
-    requires: `Kræver Minecraft Bedrock ${minVersion} eller nyere`,
+    requires: `Bedrock ${minVersion}+ · Java 26.3 med Fabric, Fabric API og GeckoLib`,
     features: 'Indhold',
     feats: [
       [`${count} dyr`, 'Hvert dyr har sin egen model, tekstur og animationer: gang, svømning, flyvning, angreb og hvile.'],
@@ -150,6 +154,7 @@ const T = {
       'Opret eller rediger en verden. Under <b>Adfærdspakker</b> (Behavior Packs) aktiverer du <i>Prehistoric Dinosaurs BP</i> (ressourcepakken tilføjes automatisk).',
       'Valgfrit: slå eksperimentet <b>Custom Biomes</b> til for at få det forhistoriske junglebiom. Alt andet virker uden eksperimenter.',
       'Første gang du er i verdenen, får du en <b>Dino Field Guide</b> (felthåndbog).',
+      `<b>Java Edition:</b> installér <a href="https://fabricmc.net/use/">Fabric Loader</a> til Minecraft 26.3 samt <a href="https://modrinth.com/mod/fabric-api">Fabric API</a> og <a href="https://modrinth.com/mod/geckolib">GeckoLib</a>. Læg derefter <a href="${javaJar}"><code>prehistoric-dinosaurs-fabric-${VERSION || '&lt;version&gt;'}.jar</code></a> i din <code>mods</code>-mappe. Det forhistoriske junglebiom findes kun på Bedrock; på Java dukker planterne og dyrene op i de almindelige biomer.`,
     ],
     tameEgg: 'Tæmmes fra æg',
     tameable: 'Kan tæmmes',
@@ -242,7 +247,7 @@ footer{padding:28px 0 48px;color:var(--muted);font-size:.9rem}
 <header><a class="lang" href="${other.href}" hreflang="${other.hreflang}" lang="${other.hreflang}">${other.label}</a><div class="wrap"><img src="${img('icon.png')}" alt=""><div>
 <h1>${t.title}</h1>
 <p>${t.intro}</p>
-<div class="cta"><a class="btn primary" href="${direct}">${t.download(VERSION)}</a><a class="btn ghost" href="${latest}">${t.allReleases}</a><a class="btn ghost" href="https://github.com/${REPO}">${t.source}</a></div>
+<div class="cta"><a class="btn primary" href="${direct}">${t.download(VERSION)}</a><a class="btn primary" href="${javaJar}">${t.javaDownload(VERSION)}</a><a class="btn ghost" href="${latest}">${t.allReleases}</a><a class="btn ghost" href="https://github.com/${REPO}">${t.source}</a></div>
 <p class="ver">${t.version(VERSION)}${t.requires}</p>
 </div></div></header>
 <main class="wrap">
@@ -267,7 +272,7 @@ fs.writeFileSync(path.join(OUT, 'index.html'), page('en'));
 fs.mkdirSync(path.join(OUT, 'da'), { recursive: true });
 fs.writeFileSync(path.join(OUT, 'da', 'index.html'), page('da'));
 fs.writeFileSync(path.join(OUT, '.nojekyll'), '');
-fs.writeFileSync(path.join(OUT, 'latest.json'), JSON.stringify({ version: VERSION || null, download: direct, releases: latest }, null, 2));
+fs.writeFileSync(path.join(OUT, 'latest.json'), JSON.stringify({ version: VERSION || null, download: direct, java: javaJar, releases: latest }, null, 2));
 
 const missing = CREATURES.filter((c) => !DA_INFO[c.id]).map((c) => c.id);
 if (missing.length) throw new Error(`missing Danish texts for: ${missing.join(', ')}`);
