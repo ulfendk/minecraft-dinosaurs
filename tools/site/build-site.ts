@@ -84,8 +84,9 @@ const T = {
     title: 'Prehistoric Dinosaurs',
     description: `A Minecraft Bedrock add-on with ${dinoCount} dinosaurs, ${others} more prehistoric creatures, ancient plants, a prehistoric biome, electric fences and safari vehicles.`,
     intro: `A Minecraft mod for Bedrock and Java with <b>${dinoCount} dinosaurs</b> and <b>${others} more prehistoric creatures</b>: megalodon, mosasaurus, pterosaurs, Titanoboa and others. It also has ancient plants, a Prehistoric Jungle biome, tameable and rideable dinosaurs, electric fences and safari vehicles.`,
-    download: (v: string) => `Bedrock ${v ? `v${v}` : ''} (.mcaddon)`,
-    javaDownload: (v: string) => `Java ${v ? `v${v}` : ''} (Fabric .jar)`,
+    download: (v: string) => `iPad, phone, console & Windows: Bedrock ${v ? `v${v}` : ''}`,
+    javaDownload: (v: string) => `Mac & PC Java Edition ${v ? `v${v}` : ''}`,
+    which: '<b>Which one do I need?</b> Playing on an <b>iPad</b>, iPhone, Android, Xbox, PlayStation, Switch or Minecraft for Windows? That is <b>Bedrock Edition</b> – take the first download. Playing on a computer with the Minecraft <b>Java Edition</b> launcher (Mac, Windows or Linux)? Take the Java download. Not sure? If you bought Minecraft in the App Store or Google Play, it is Bedrock.',
     allReleases: 'All releases',
     source: 'Source on GitHub',
     version: (v: string) => (v ? `Latest version: <b>v${v}</b> · ` : ''),
@@ -99,7 +100,7 @@ const T = {
       ['Fossils and amber', 'Mine fossil blocks and amber ore, and look for the rare mosquito in amber.'],
       ['Field guide', 'An in-game book with facts about every species and how to tame and ride it.'],
     ],
-    install: 'Install',
+    install: 'Install on iPad, phone, console or Windows (Bedrock)',
     steps: [
       `Download <a href="${direct}"><code>${file}</code></a> from the latest release.`,
       'Open the file. On Windows, mobile and consoles with file access, Minecraft imports both packs automatically. On other platforms, unzip it and copy <code>dinosaurs_BP</code> and <code>dinosaurs_RP</code> into <code>behavior_packs</code> and <code>resource_packs</code>.',
@@ -132,8 +133,9 @@ const T = {
     title: 'Forhistoriske Dinosaurer',
     description: `En Minecraft Bedrock-tilføjelse med ${dinoCount} dinosaurer, ${others} andre forhistoriske dyr, oldtidsplanter, et forhistorisk biom, elektriske hegn og safarikøretøjer.`,
     intro: `En Minecraft-mod til Bedrock og Java med <b>${dinoCount} dinosaurer</b> og <b>${others} andre forhistoriske dyr</b>: megalodon, mosasaurus, flyveøgler, Titanoboa og flere. Den har også oldtidsplanter, et forhistorisk junglebiom, dinosaurer du kan tæmme og ride på, elektriske hegn og safarikøretøjer.`,
-    download: (v: string) => `Bedrock ${v ? `v${v}` : ''} (.mcaddon)`,
-    javaDownload: (v: string) => `Java ${v ? `v${v}` : ''} (Fabric .jar)`,
+    download: (v: string) => `iPad, telefon, konsol & Windows: Bedrock ${v ? `v${v}` : ''}`,
+    javaDownload: (v: string) => `Mac & PC Java Edition ${v ? `v${v}` : ''}`,
+    which: '<b>Hvilken skal jeg bruge?</b> Spiller du på <b>iPad</b>, iPhone, Android, Xbox, PlayStation, Switch eller Minecraft til Windows? Så er det <b>Bedrock Edition</b> – tag den første download. Spiller du på en computer med Minecraft <b>Java Edition</b>-launcheren (Mac, Windows eller Linux)? Så tag Java-downloaden. I tvivl? Hvis Minecraft er købt i App Store eller Google Play, er det Bedrock.',
     allReleases: 'Alle udgivelser',
     source: 'Kildekode på GitHub',
     version: (v: string) => (v ? `Nyeste version: <b>v${v}</b> · ` : ''),
@@ -147,7 +149,7 @@ const T = {
       ['Fossiler og rav', 'Bryd fossilblokke og ravmalm, og led efter den sjældne myg i rav.'],
       ['Felthåndbog', 'En bog i spillet med fakta om alle arter, og hvordan du tæmmer og rider på dem.'],
     ],
-    install: 'Installation',
+    install: 'Installation på iPad, telefon, konsol eller Windows (Bedrock)',
     steps: [
       `Hent <a href="${direct}"><code>${file}</code></a> fra den nyeste udgivelse.`,
       'Åbn filen. På Windows, mobil og konsoller med filadgang importerer Minecraft begge pakker automatisk. På andre platforme skal du pakke den ud og kopiere <code>dinosaurs_BP</code> og <code>dinosaurs_RP</code> til <code>behavior_packs</code> og <code>resource_packs</code>.',
@@ -225,7 +227,7 @@ a{color:var(--accent)}header{background:linear-gradient(160deg,#20321a,#3f6b2f 6
 header img{width:112px;height:112px;image-rendering:pixelated;border-radius:18px;box-shadow:0 8px 24px #0006}
 h1{font-size:clamp(2rem,5vw,3.2rem);margin:0 0 6px;letter-spacing:-.02em}header p{margin:0;max-width:720px;color:#e3e8d6}
 .cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:18px}.btn{display:inline-block;padding:12px 18px;border-radius:10px;font-weight:650;text-decoration:none}
-.btn.primary{background:#f2c14a;color:#2a2410}.btn.ghost{border:1px solid #f6f3e688;color:#f6f3e6}.ver{font-size:.9rem;color:#d8e2c6;margin-top:10px}
+.btn.primary{background:#f2c14a;color:#2a2410}.btn.java{background:#e9e4d2;color:#2a2410}.which{margin-top:14px;background:#0003;border:1px solid #f6f3e655;border-radius:10px;padding:10px 14px;max-width:760px}.btn.ghost{border:1px solid #f6f3e688;color:#f6f3e6}.ver{font-size:.9rem;color:#d8e2c6;margin-top:10px}
 main section{padding:28px 0;border-bottom:1px solid var(--line)}h2{font-size:1.5rem;margin:0 0 16px}h2 small{font-size:.9rem;color:var(--muted);font-weight:500}
 .features{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}.feature{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px}
 .feature h3{margin:0 0 6px;font-size:1.05rem}.feature p{margin:0;color:var(--muted)}
@@ -247,7 +249,8 @@ footer{padding:28px 0 48px;color:var(--muted);font-size:.9rem}
 <header><a class="lang" href="${other.href}" hreflang="${other.hreflang}" lang="${other.hreflang}">${other.label}</a><div class="wrap"><img src="${img('icon.png')}" alt=""><div>
 <h1>${t.title}</h1>
 <p>${t.intro}</p>
-<div class="cta"><a class="btn primary" href="${direct}">${t.download(VERSION)}</a><a class="btn primary" href="${javaJar}">${t.javaDownload(VERSION)}</a><a class="btn ghost" href="${latest}">${t.allReleases}</a><a class="btn ghost" href="https://github.com/${REPO}">${t.source}</a></div>
+<div class="cta"><a class="btn primary" href="${direct}">${t.download(VERSION)}</a><a class="btn java" href="${javaJar}">${t.javaDownload(VERSION)}</a><a class="btn ghost" href="${latest}">${t.allReleases}</a><a class="btn ghost" href="https://github.com/${REPO}">${t.source}</a></div>
+<p class="which">${t.which}</p>
 <p class="ver">${t.version(VERSION)}${t.requires}</p>
 </div></div></header>
 <main class="wrap">
