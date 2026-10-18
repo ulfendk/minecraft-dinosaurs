@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 jobs:
   release:
@@ -49,10 +50,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: gh release create "$GITHUB_REF_NAME" dist/* --title "Prehistoric Dinosaurs $GITHUB_REF_NAME" --notes-file RELEASE_NOTES.md --verify-tag
 
-  pages:
-    needs: release
-    uses: ./.github/workflows/pages.yml
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
+      # Pages may only deploy from main (environment protection), so rebuild the site there.
+      - name: Refresh GitHub Pages
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run pages.yml --ref main --repo "$GITHUB_REPOSITORY"
