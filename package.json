@@ -19,7 +19,9 @@
     "preview:misc": "tsx tools/preview/render-misc.ts",
     "site": "tsx tools/site/build-site.ts",
     "icon": "tsx tools/make-icon.ts",
-    "smoke": "npm run build && bash tools/bds-smoke.sh"
+    "smoke": "npm run build && bash tools/bds-smoke.sh",
+    "build:java": "tsx src/emit/java/emit.ts",
+    "java": "npm run build:java && cd java && ./gradlew build"
   },
   "devDependencies": {
     "@minecraft/server": "2.9.0",

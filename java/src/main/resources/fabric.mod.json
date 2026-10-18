@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "dinosaurs",
+  "version": "${version}",
+  "name": "Prehistoric Dinosaurs",
+  "description": "50 dinosaurs and 12 more prehistoric creatures, ancient plants, electric fences, safari vehicles and ranger gear.",
+  "authors": ["minecraft-dinosaurs contributors"],
+  "contact": { "homepage": "https://ulfendk.github.io/minecraft-dinosaurs/", "sources": "https://github.com/ulfendk/minecraft-dinosaurs" },
+  "license": "MIT",
+  "icon": "assets/dinosaurs/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": ["dk.ulfen.dinosaurs.DinosaursMod"],
+    "client": ["dk.ulfen.dinosaurs.client.DinosaursClient"]
+  },
+  "depends": {
+    "fabricloader": ">=0.19.0",
+    "minecraft": "~26.3",
+    "java": ">=25",
+    "fabric-api": "*",
+    "geckolib": ">=5.5"
+  }
+}

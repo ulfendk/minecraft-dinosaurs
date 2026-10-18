@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# Starts the Fabric dev server, summons every creature + egg, places eggs, then stops.
+set -u
+cd "$(dirname "$0")"
+J="$(cd "$(dirname "$0")" && pwd)"
+LOG=$J/run/smoke.log
+rm -f $LOG; rm -rf $J/run/world
+FIFO=$(mktemp -u); mkfifo $FIFO
+( cd $J && ./gradlew --no-daemon runServer --args="nogui" < $FIFO > $LOG 2>&1 ) &
+exec 3>$FIFO
+for i in $(seq 1 240); do grep -q "Done (" $LOG 2>/dev/null && break; grep -q "BUILD FAILED\|Exception in thread" $LOG && break; sleep 2; done
+ids=$(python3 -c "import json;print(' '.join(c['id'] for c in json.load(open('$J/src/generated/resources/dinosaurs/creatures.json'))))")
+i=0; for id in $ids; do echo "summon dinosaurs:$id $(( (i%10)*6 )) -60 $(( i/10*6 ))" >&3; i=$((i+1)); sleep 0.1; done
+echo "summon dinosaurs:egg 0 -60 70" >&3
+sleep 20
+echo "execute as @e[type=dinosaurs:tyrannosaurus] run data get entity @s Health" >&3
+echo "list" >&3
+sleep 3
+echo "stop" >&3
+exec 3>&-
+wait
+rm -f $FIFO
+echo "== summoned: $(grep -c 'Summoned new' $LOG)"
+grep -n "ERROR\|Exception\|WARN.*dinosaurs\|Caused by" $LOG | head -30
