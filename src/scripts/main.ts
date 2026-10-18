@@ -125,6 +125,8 @@ function setGenerator(block: Block, on: boolean) {
   updateAround(block.dimension, block.location);
 }
 
+system.run(() => console.log(`[dino] scripts loaded (${DATA.creatures.length} creatures)`));
+
 // ---------------------------------------------------------------- custom block components
 
 system.beforeEvents.startup.subscribe(({ blockComponentRegistry }) => {
@@ -332,7 +334,7 @@ function showGuide(player: Player) {
       player,
       'Park gear',
       [
-        '§eElectric fence:§r two blocks tall and links up with its neighbours. Place a §eFence Generator§r touching the fence and switch it on (right-click, or power it with redstone). Powered fences shock anything that touches them.',
+        '§eElectric fence:§r one and a half blocks tall, so creatures cannot step over it, and it links up with its neighbours. Place a §eFence Generator§r touching the fence and switch it on (right-click, or power it with redstone). Powered fences shock anything that touches them.',
         'Big carnivores will smash through fences that have no power!',
         '§eVehicles:§r the Safari Truck and the Tour Car seat four, and the Gyrosphere seats two. Place them, climb in and drive with WASD. Hit one to pick it back up.',
       ].join('\n\n'),

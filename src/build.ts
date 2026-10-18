@@ -45,6 +45,8 @@ export async function build(opts: { quiet?: boolean } = {}) {
   // items, blocks, world generation, scripts, vehicles…
   await emitWorld({ bp, rp, lang, sounds, assembled });
 
+  bp.copy('pack_icon.png', path.resolve('packs/static/pack_icon.png'));
+  rp.copy('pack_icon.png', path.resolve('packs/static/pack_icon.png'));
   bp.json('manifest.json', bpManifest());
   rp.json('manifest.json', rpManifest());
   rp.json('sounds.json', { entity_sounds: { entities: sounds } });

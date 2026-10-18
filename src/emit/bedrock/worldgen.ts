@@ -159,9 +159,9 @@ export function emitWorldgen(bp: OutDir, rp: OutDir, lang: string[]) {
         },
         'minecraft:replace_biomes': {
           replacements: [
-            { dimension: 'minecraft:overworld', targets: ['jungle', 'bamboo_jungle', 'jungle_edge'], amount: 0.45, noise_frequency_scale: 0.5 },
-            { dimension: 'minecraft:overworld', targets: ['swampland', 'mangrove_swamp'], amount: 0.3, noise_frequency_scale: 0.5 },
-            { dimension: 'minecraft:overworld', targets: ['savanna', 'savanna_plateau', 'plains', 'forest'], amount: 0.12, noise_frequency_scale: 0.4 },
+            { dimension: 'minecraft:overworld', targets: ['minecraft:jungle', 'minecraft:bamboo_jungle', 'minecraft:jungle_edge'], amount: 0.45, noise_frequency_scale: 0.5 },
+            { dimension: 'minecraft:overworld', targets: ['minecraft:swampland', 'minecraft:mangrove_swamp'], amount: 0.3, noise_frequency_scale: 0.5 },
+            { dimension: 'minecraft:overworld', targets: ['minecraft:savanna', 'minecraft:savanna_plateau', 'minecraft:plains', 'minecraft:forest'], amount: 0.12, noise_frequency_scale: 0.4 },
           ],
         },
         'minecraft:tags': { tags: ['animal', 'monster', 'overworld', PREHISTORIC_TAG] },

@@ -1,0 +1,58 @@
+name: Release
+
+# Push a tag like v1.2.3 to publish a GitHub release with the .mcaddon attached,
+# then refresh the GitHub Pages site with the new version.
+on:
+  push:
+    tags: ['v*.*.*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run schemas
+      - run: npm run typecheck
+      - run: npm test
+      - name: Package add-on
+        run: PACK_VERSION="${GITHUB_REF_NAME#v}" npm run package
+      - name: Smoke test in Bedrock Dedicated Server
+        run: bash tools/bds-smoke.sh 30
+      - name: Write release notes
+        run: |
+          prev="$(git describe --tags --abbrev=0 "${GITHUB_REF_NAME}^" 2>/dev/null || true)"
+          {
+            echo "## Install"
+            echo
+            echo "1. Download **prehistoric-dinosaurs-${GITHUB_REF_NAME#v}.mcaddon** below and open it — Minecraft imports both packs."
+            echo "2. Activate **Prehistoric Dinosaurs BP** on a world (the resource pack is added automatically)."
+            echo "3. Optional: enable the **Custom Biomes** experiment for the Prehistoric Jungle biome."
+            echo
+            min="$(npx tsx -e "import { MIN_ENGINE } from './src/emit/bedrock/constants.ts'; console.log(MIN_ENGINE.join('.'))")"
+            echo "Requires Minecraft Bedrock ${min} or newer. Creature catalogue: https://${GITHUB_REPOSITORY_OWNER}.github.io/${GITHUB_REPOSITORY#*/}/"
+            echo
+            echo "## Changes"
+            if [ -n "$prev" ]; then git log --pretty='- %s' "$prev..HEAD"; else git log --pretty='- %s'; fi
+          } > RELEASE_NOTES.md
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" dist/* --title "Prehistoric Dinosaurs $GITHUB_REF_NAME" --notes-file RELEASE_NOTES.md --verify-tag
+
+  pages:
+    needs: release
+    uses: ./.github/workflows/pages.yml
+    permissions:
+      contents: read
+      pages: write
+      id-token: write

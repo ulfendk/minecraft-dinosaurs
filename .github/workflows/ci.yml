@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Fetch official Bedrock JSON schemas
+        run: npm run schemas
+      - run: npm run typecheck
+      - run: npm test
+      - name: Package add-on
+        run: PACK_VERSION="$(node -p "require('./package.json').version")" npm run package
+      - uses: actions/upload-artifact@v4
+        with:
+          name: prehistoric-dinosaurs-${{ github.sha }}
+          path: dist/*
+          if-no-files-found: error
+
+  # Loads the packs into a real Bedrock Dedicated Server, summons every entity,
+  # loads every tree structure and fails on any content-log error.
+  dedicated-server:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: bash tools/bds-smoke.sh 30
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bds-logs
+          path: |
+            .cache/bds/server-output.log
+            .cache/bds/problems.log
+          if-no-files-found: ignore

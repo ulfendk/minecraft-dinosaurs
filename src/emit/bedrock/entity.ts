@@ -286,8 +286,8 @@ export function behaviorEntity(c: CreatureDef, ctx: EntityCtx): J {
   };
   if (c.ride) {
     events['dino:on_saddled'] = { remove: { component_groups: ['dino:tame_adult_rideable'] }, add: { component_groups: ['dino:saddled'] } };
-    events['dino:on_unsaddled'] = { remove: { component_groups: ['dino:saddled', 'dino:ridden_fly', 'dino:ridden_swim'] }, add: { component_groups: ['dino:tame_adult_rideable'] } };
     const rideGroup = c.ride.mode === 'fly' ? 'dino:ridden_fly' : c.ride.mode === 'swim' ? 'dino:ridden_swim' : undefined;
+    events['dino:on_unsaddled'] = { remove: { component_groups: ['dino:saddled', ...(rideGroup ? [rideGroup] : [])] }, add: { component_groups: ['dino:tame_adult_rideable'] } };
     if (rideGroup) {
       events['dino:on_mount'] = { add: { component_groups: [rideGroup] } };
       events['dino:on_dismount'] = { remove: { component_groups: [rideGroup] } };

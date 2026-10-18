@@ -185,7 +185,7 @@ export function buildBlocks(): BlockOut[] {
   const ft = fenceTextures();
   const fenceVis = {
     post: 1,
-    cap: "q.block_state('minecraft:multi_block_part') == 1",
+    cap: 1,
     wire_n: "q.block_state('minecraft:connection_north')",
     wire_e: "q.block_state('minecraft:connection_east')",
     wire_s: "q.block_state('minecraft:connection_south')",
@@ -202,10 +202,7 @@ export function buildBlocks(): BlockOut[] {
       {
         menu_category: { category: 'construction' },
         states: { 'dino:powered': ['off', 'on'] },
-        traits: {
-          'minecraft:connection': { enabled_states: ['minecraft:cardinal_connections'] },
-          'minecraft:multi_block': { enabled_states: ['minecraft:multi_block_part'], parts: 2, direction: 'up' },
-        },
+        traits: { 'minecraft:connection': { enabled_states: ['minecraft:cardinal_connections'] } },
       },
       {
         ...display('electric_fence'),
@@ -214,15 +211,15 @@ export function buildBlocks(): BlockOut[] {
         'minecraft:map_color': '#5a5f66',
         'minecraft:geometry': { identifier: 'geometry.dino.electric_fence', bone_visibility: fenceVis },
         'minecraft:material_instances': { '*': { texture: `${NS}_electric_fence`, render_method: 'alpha_test' } },
-        'minecraft:collision_box': { origin: [-8, 0, -8], size: [16, 16, 16] },
-        'minecraft:selection_box': { origin: [-8, 0, -8], size: [16, 16, 16] },
+        // 1.5 blocks tall like vanilla fences, so creatures cannot step over it
+        'minecraft:collision_box': { origin: [-8, 0, -8], size: [16, 24, 16] },
+        'minecraft:selection_box': { origin: [-3, 0, -3], size: [6, 16, 6] },
         'minecraft:connection_rule': { accepts_connections_from: 'all' },
         'minecraft:light_dampening': 0,
         'minecraft:loot': 'loot_tables/blocks/electric_fence.json',
         'dino:electric_fence': {},
       },
       [
-        { condition: "q.block_state('minecraft:multi_block_part') == 1", components: { 'minecraft:loot': 'loot_tables/empty.json' } },
         { condition: "q.block_state('dino:powered') == 'on'", components: { 'minecraft:material_instances': { '*': { texture: `${NS}_electric_fence_on`, render_method: 'alpha_test' } }, 'minecraft:light_emission': 4 } },
       ],
     ),
@@ -257,16 +254,16 @@ export function buildBlocks(): BlockOut[] {
 /** Block geometry for the electric fence: post, top cap, and 3 wires per direction. */
 export function fenceGeometry() {
   const wires = (name: string, size: number[], origins: number[][]) => ({ name, parent: 'root', pivot: [0, 0, 0], cubes: origins.map((o) => ({ origin: o, size, uv: { north: { uv: [0, 0], uv_size: [16, 1] }, south: { uv: [0, 0], uv_size: [16, 1] }, east: { uv: [0, 0], uv_size: [16, 1] }, west: { uv: [0, 0], uv_size: [16, 1] }, up: { uv: [0, 0], uv_size: [16, 1] }, down: { uv: [0, 0], uv_size: [16, 1] } } })) });
-  const ys = [3, 8, 13];
+  const ys = [4, 10, 16, 21];
   const face = (u: number, v: number, w: number, h: number) => ({ uv: [u, v], uv_size: [w, h] });
   const post = {
     name: 'post',
     parent: 'root',
     pivot: [0, 0, 0],
-    cubes: [{ origin: [-2, 0, -2], size: [4, 16, 4], uv: { north: face(4, 0, 4, 16), south: face(4, 0, 4, 16), east: face(4, 0, 4, 16), west: face(4, 0, 4, 16), up: face(8, 0, 4, 4), down: face(8, 0, 4, 4) } }],
+    cubes: [{ origin: [-2, 0, -2], size: [4, 24, 4], uv: { north: face(0, 1, 4, 15), south: face(0, 1, 4, 15), east: face(0, 1, 4, 15), west: face(0, 1, 4, 15), up: face(4, 1, 4, 4), down: face(4, 1, 4, 4) } }],
   };
   // insulators on the post at each wire height
-  for (const y of ys) post.cubes.push({ origin: [-2.5, y - 0.5, -2.5], size: [5, 2, 5], uv: { north: face(12, 0, 4, 2), south: face(12, 0, 4, 2), east: face(12, 0, 4, 2), west: face(12, 0, 4, 2), up: face(12, 0, 4, 4), down: face(12, 0, 4, 4) } } as any);
+  for (const y of ys) post.cubes.push({ origin: [-2.5, y - 0.5, -2.5], size: [5, 2, 5], uv: { north: face(8, 1, 4, 2), south: face(8, 1, 4, 2), east: face(8, 1, 4, 2), west: face(8, 1, 4, 2), up: face(8, 3, 4, 4), down: face(8, 3, 4, 4) } } as any);
   return {
     format_version: '1.21.0',
     'minecraft:geometry': [
@@ -279,7 +276,7 @@ export function fenceGeometry() {
             name: 'cap',
             parent: 'root',
             pivot: [0, 0, 0],
-            cubes: [{ origin: [-3, 14, -3], size: [6, 2, 6], uv: { north: face(8, 4, 6, 2), south: face(8, 4, 6, 2), east: face(8, 4, 6, 2), west: face(8, 4, 6, 2), up: face(8, 6, 6, 6), down: face(8, 6, 6, 6) } }],
+            cubes: [{ origin: [-3, 24, -3], size: [6, 2, 6], uv: { north: face(12, 1, 4, 2), south: face(12, 1, 4, 2), east: face(12, 1, 4, 2), west: face(12, 1, 4, 2), up: face(12, 3, 4, 4), down: face(12, 3, 4, 4) } }],
           },
           wires('wire_n', [1, 1, 6], ys.map((y) => [-0.5, y, -8])),
           wires('wire_s', [1, 1, 6], ys.map((y) => [-0.5, y, 2])),

@@ -28,12 +28,13 @@ const shaped = (id: string, pattern: string[], key: Record<string, string>, resu
     tags,
     pattern,
     key: Object.fromEntries(Object.entries(key).map(([k, v]) => [k, { item: v }])),
+    unlock: [...new Set(Object.values(key))].slice(0, 2).map((item) => ({ item })),
     result: { item: result, count },
   },
 });
 const shapeless = (id: string, ingredients: string[], result: string, count = 1) => ({
   format_version: FORMAT.recipe,
-  'minecraft:recipe_shapeless': { description: { identifier: `${NS}:${id}` }, tags: ['crafting_table'], ingredients: ingredients.map((item) => ({ item })), result: { item: result, count } },
+  'minecraft:recipe_shapeless': { description: { identifier: `${NS}:${id}` }, tags: ['crafting_table'], ingredients: ingredients.map((item) => ({ item })), unlock: [{ item: ingredients[0] }], result: { item: result, count } },
 });
 const smelt = (id: string, input: string, output: string) => ({
   format_version: FORMAT.recipe,

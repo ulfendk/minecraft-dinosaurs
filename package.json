@@ -10,24 +10,28 @@
   },
   "scripts": {
     "build": "tsx src/build.ts",
-    "preview": "tsx tools/preview/render-all.ts",
+    "package": "tsx src/package.ts",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "package": "tsx src/package.ts"
+    "validate": "tsx tools/schemas.ts",
+    "schemas": "bash tools/fetch-schemas.sh",
+    "preview": "tsx tools/preview/render-all.ts",
+    "preview:misc": "tsx tools/preview/render-misc.ts",
+    "site": "tsx tools/site/build-site.ts",
+    "icon": "tsx tools/make-icon.ts",
+    "smoke": "npm run build && bash tools/bds-smoke.sh"
   },
   "devDependencies": {
+    "@minecraft/server": "2.9.0",
+    "@minecraft/server-ui": "2.0.0",
     "@types/node": "^26.6.5",
     "@types/pngjs": "^6.0.5",
     "ajv": "^8.20.0",
+    "esbuild": "^0.28.2",
+    "fflate": "^0.8.3",
+    "pngjs": "^7.0.0",
     "tsx": "^4.23.15",
     "typescript": "^5.9.3",
     "vitest": "^5.0.5"
-  },
-  "dependencies": {
-    "@minecraft/server": "^2.9.0",
-    "@minecraft/server-ui": "^2.0.0",
-    "esbuild": "^0.28.2",
-    "fflate": "^0.8.3",
-    "pngjs": "^7.0.0"
   }
 }

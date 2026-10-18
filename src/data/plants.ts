@@ -29,7 +29,7 @@ export interface TreeDef {
   mapColor: string;
 }
 
-export const SOIL = ['minecraft:grass_block', 'minecraft:dirt', 'minecraft:coarse_dirt', 'minecraft:podzol', 'minecraft:rooted_dirt', 'minecraft:moss_block', 'minecraft:mud', 'minecraft:muddy_mangrove_roots', 'minecraft:farmland'];
+export const SOIL = ['minecraft:grass_block', 'minecraft:dirt', 'minecraft:coarse_dirt', 'minecraft:podzol', 'minecraft:dirt_with_roots', 'minecraft:moss_block', 'minecraft:mud', 'minecraft:muddy_mangrove_roots', 'minecraft:farmland'];
 
 const G = { d: '#1f4a1c', g: '#2f6b28', G: '#4f9a3a', l: '#7cc35a', y: '#b8d86a' };
 
