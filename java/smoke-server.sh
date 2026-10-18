@@ -4,6 +4,8 @@ set -u
 cd "$(dirname "$0")"
 J="$(cd "$(dirname "$0")" && pwd)"
 LOG=$J/run/smoke.log
+mkdir -p $J/run && echo "eula=true" > $J/run/eula.txt
+printf 'online-mode=false\nlevel-type=minecraft\\:flat\nspawn-protection=0\nview-distance=4\nsimulation-distance=4\n' > $J/run/server.properties
 rm -f $LOG; rm -rf $J/run/world
 FIFO=$(mktemp -u); mkfifo $FIFO
 ( cd $J && ./gradlew --no-daemon runServer --args="nogui" < $FIFO > $LOG 2>&1 ) &
