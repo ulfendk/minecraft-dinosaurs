@@ -12,9 +12,7 @@ import { treeTextures } from '../../src/data/plants.js';
 import { toGeoJson } from '../../src/model/geo.js';
 import { upscale, blank } from '../../src/texture/pixelart.js';
 import { collectTris, renderView, sheet } from './render.js';
-import { ModelBuilder } from '../../src/model/builder.js';
-import { packUV } from '../../src/model/uv.js';
-import { paint } from '../../src/texture/painter.js';
+import { seatedDummies } from './dummy.js';
 
 const OUT = path.resolve(process.env.PREVIEW_OUT ?? 'docs/gallery');
 fs.mkdirSync(OUT, { recursive: true });
@@ -27,28 +25,11 @@ const grid = (imgs: PNG[], cols: number, cell: number) => {
 };
 
 // vehicles, with a seated player-sized dummy (1.8 blocks tall) in every seat for scale
-function seatedPlayers(seats: [number, number, number][], scale: number) {
-  const mb = new ModelBuilder('dummy');
-  mb.bone('root', undefined, [0, 0, 0]);
-  const b = mb.bone('p', 'root', [0, 0, 0]);
-  for (const [x0, y0, z0] of seats) {
-    const [x, y, z] = [x0 * scale, y0 * scale, z0 * scale];
-    b.box([x - 4, y, z - 2], [8, 12, 4], 'paint'); // torso
-    b.box([x - 4, y + 12, z - 4], [8, 8, 8], 'skin'); // head
-    b.box([x - 4, y, z - 12], [4, 4, 12], 'paint2'); // legs, forward
-    b.box([x, y, z - 12], [4, 4, 12], 'paint2');
-    b.box([x - 8, y + 2, z - 2], [4, 10, 4], 'skin'); // arms
-    b.box([x + 4, y + 2, z - 2], [4, 10, 4], 'skin');
-  }
-  const m = packUV(mb.build());
-  const tex = paint(m, { back: '#c8956c', side: '#c8956c', belly: '#b07a55', accent: '#2f8fa8', accent2: '#3a3a8a' });
-  return collectTris(toGeoJson(m, 'd')['minecraft:geometry'][0].bones as any).map((t) => ({ ...t, tex }));
-}
 for (const v of VEHICLES) {
   const { model, texture } = vehicleAssets(v);
   const bones = toGeoJson(model, 'g')['minecraft:geometry'][0].bones as any;
   const scaled = collectTris(bones).map((t) => ({ ...t, p: t.p.map((q) => q.map((c) => c * v.scale) as [number, number, number]) }));
-  const tris = [...scaled, ...seatedPlayers(v.seatsPx, v.scale)];
+  const tris = [...scaled, ...seatedDummies(v.seatsPx, v.scale)];
   fs.writeFileSync(path.join(OUT, `vehicle_${v.id}.png`), PNG.sync.write(sheet([renderView(tris, texture, { yaw: 35, pitch: 20 }, 300), renderView(tris, texture, { yaw: 90, pitch: 5 }, 300), renderView(tris, texture, { yaw: 215, pitch: 30 }, 300)], 3)));
 }
 // item icons

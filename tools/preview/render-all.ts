@@ -9,6 +9,8 @@ import { assemble, type Assembled } from '../../src/creatures/assemble.js';
 import { CREATURES } from '../../src/data/registry.js';
 import { toGeoJson } from '../../src/model/geo.js';
 import { collectTris, renderView, sheet, type Pose } from './render.js';
+import { seatedDummies } from './dummy.js';
+import { seatPositions } from '../../src/emit/bedrock/entity.js';
 
 const OUT = path.resolve(process.env.PREVIEW_OUT ?? 'docs/gallery');
 
@@ -32,6 +34,13 @@ export function renderCreature(x: Assembled, size = 300, frames = true): PNG {
     views.push(renderView(collectTris(bones, walk, hide), x.texture, { yaw: 90, pitch: 2 }, size));
     const extra = x.rig.kind === 'theropod' || x.rig.kind === 'quadruped' ? poseFor(x, { is_sitting: 1, is_saddled: 1 }) : poseFor(x, { life_time: 1.1 }, { attack_time: 0.5 });
     views.push(renderView(collectTris(bones, extra, []), x.texture, { yaw: 215, pitch: 25 }, size));
+  }
+  if (frames && x.def.ride) {
+    // rider check: saddle + seated player dummies at the real seat positions, in render scale
+    const k = x.def.scale;
+    const seats: [number, number, number][] = seatPositions(x).map(([sx, sy, sz]) => [-sx * 16, (sy + 0.15) * 16, -sz * 16]);
+    const scaled = collectTris(bones, poseFor(x, {}), []).map((t) => ({ ...t, p: t.p.map((q) => q.map((c) => c * k) as [number, number, number]) }));
+    views.push(renderView([...scaled, ...seatedDummies(seats)], x.texture, { yaw: 70, pitch: 10 }, size));
   }
   return sheet(views, views.length);
 }

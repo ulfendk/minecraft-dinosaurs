@@ -194,7 +194,10 @@ export const theropodsLarge: CreatureDef[] = [
         arms: { len: 11, w: 3, angle: -45, big: true },
         legs: { thighW: 8, footLen: 8, footW: 7 },
       }));
-      F.sail(r, { h: 26, from: r.a.bodyFront + 3, to: r.a.bodyBack - 1, arch: true });
+      // the sail rises behind the shoulders, leaving room for a saddle (two riders) in front of it
+      const sailStart = r.a.bodyFront + 15;
+      F.sail(r, { h: 26, from: sailStart, to: r.a.bodyBack - 1, arch: true });
+      r.a.seat = [0, r.a.bodyTop, r.a.bodyFront + 7];
       // sail continues low onto the tail base
       F.sail(r, { h: 7, from: r.mb.get('tail0').pivot[2], to: r.mb.get('tail0').pivot[2] + 10, arch: true, bone: 'tail0' });
       thumbClaws(r, 11, 3);

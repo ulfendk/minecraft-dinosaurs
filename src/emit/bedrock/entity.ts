@@ -311,9 +311,17 @@ function seatList(n: number, ctx: EntityCtx) {
   return Array.from({ length: n }, (_, i) => ({
     min_rider_count: 0,
     max_rider_count: n,
-    position: [0, y, round(ctx.seat.z + (i - (n - 1) / 2) * 1.0)],
+    // seat 0 (the rider who steers) is in front; entity space faces +z
+    position: [0, y, round(ctx.seat.z + ((n - 1) / 2 - i) * 1.0)],
     third_person_camera_radius: Math.max(5, Math.round(ctx.hitbox.height * 2.2)),
   }));
 }
 
 const round = (v: number) => Math.round(v * 100) / 100;
+
+/** Seat positions in entity space (blocks) for a rideable creature; used by previews. */
+export function seatPositions(x: { def: CreatureDef; hitbox: EntityCtx['hitbox']; seat: EntityCtx['seat'] }): [number, number, number][] {
+  if (!x.def.ride) return [];
+  const s = seatList(x.def.ride.seats, { hitbox: x.hitbox, seat: x.seat });
+  return (Array.isArray(s) ? s : [s]).map((p) => p.position as [number, number, number]);
+}
