@@ -171,32 +171,39 @@ export async function buildJavaResources(opts: { quiet?: boolean } = {}) {
   return out;
 }
 
-/** Bedrock loot pools → Java loot table pools (same shape, Java item ids and function names). */
+/** Bedrock loot pools → Java 26.3 loot table pools ("modifier" lists, single "condition"). */
 export function javaLoot(t: { pools: any[] }) {
+  const one = (cs: any[]) => (cs.length === 1 ? cs[0] : { type: 'minecraft:all_of', terms: cs });
   return {
-    pools: t.pools.map((p) => ({
-      rolls: p.rolls,
-      ...(p.conditions ? { conditions: p.conditions.map(javaCondition).filter(Boolean) } : {}),
-      entries: p.entries.map((e: any) => ({
-        type: 'minecraft:item',
-        name: javaItem(e.name),
-        ...(e.weight && e.weight !== 1 ? { weight: e.weight } : {}),
-        ...(e.functions ? { functions: e.functions.map(javaFunction).filter(Boolean) } : {}),
-      })),
-    })),
+    pools: t.pools.map((p) => {
+      const conds = (p.conditions ?? []).map(javaCondition).filter(Boolean);
+      return {
+        rolls: p.rolls,
+        ...(conds.length ? { condition: one(conds) } : {}),
+        entries: p.entries.map((e: any) => {
+          const mods = (e.functions ?? []).map(javaFunction).filter(Boolean);
+          return {
+            type: 'minecraft:item',
+            name: javaItem(e.name),
+            ...(e.weight && e.weight !== 1 ? { weight: e.weight } : {}),
+            ...(mods.length ? { modifier: mods } : {}),
+          };
+        }),
+      };
+    }),
   };
 }
 
 function javaCondition(c: any) {
-  if (c.condition === 'killed_by_player') return { condition: 'minecraft:killed_by_player' };
-  if (c.condition === 'random_chance') return { condition: 'minecraft:random_chance', chance: c.chance };
-  if (c.condition === 'random_chance_with_looting') return { condition: 'minecraft:random_chance', chance: c.chance };
+  if (c.condition === 'killed_by_player') return { type: 'minecraft:killed_by_player' };
+  if (c.condition === 'random_chance' || c.condition === 'random_chance_with_looting') return { type: 'minecraft:random_chance', chance: c.chance };
   return null;
 }
 
 function javaFunction(f: any) {
-  if (f.function === 'set_count') return { function: 'minecraft:set_count', count: { type: 'minecraft:uniform', min: f.count.min, max: f.count.max } };
-  if (f.function === 'furnace_smelt') return { function: 'minecraft:furnace_smelt', conditions: [{ condition: 'minecraft:entity_properties', entity: 'this', predicate: { flags: { is_on_fire: true } } }] };
+  if (f.function === 'set_count') return { type: 'minecraft:set_count', count: { type: 'minecraft:uniform', min: f.count.min, max: f.count.max } };
+  if (f.function === 'looting_enchant') return { type: 'minecraft:enchanted_count_increase', count: { type: 'minecraft:uniform', min: 0, max: 1 }, enchantment: 'minecraft:looting' };
+  if (f.function === 'furnace_smelt') return { type: 'minecraft:furnace_smelt', condition: { type: 'minecraft:entity_properties', entity: 'this', predicate: { 'minecraft:flags': { is_on_fire: true } } } };
   return null;
 }
 

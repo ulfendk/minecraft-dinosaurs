@@ -14,6 +14,7 @@ for i in $(seq 1 240); do grep -q "Done (" $LOG 2>/dev/null && break; grep -q "B
 ids=$(python3 -c "import json;print(' '.join(c['id'] for c in json.load(open('$J/src/generated/resources/dinosaurs/creatures.json'))))")
 i=0; for id in $ids; do echo "summon dinosaurs:$id $(( (i%10)*6 )) -60 $(( i/10*6 ))" >&3; i=$((i+1)); sleep 0.1; done
 echo "summon dinosaurs:egg 0 -60 70" >&3
+for id in tyrannosaurus triceratops megalodon pteranodon; do echo "loot spawn 0 -50 0 loot dinosaurs:entities/$id" >&3; sleep 0.2; done
 sleep 20
 echo "execute as @e[type=dinosaurs:tyrannosaurus] run data get entity @s Health" >&3
 echo "list" >&3
@@ -23,6 +24,9 @@ exec 3>&-
 wait
 rm -f $FIFO
 summoned=$(grep -c 'Summoned new' $LOG || true)
+loot=$(grep -c "Dropped [1-9]" $LOG || true)
+echo "== loot tables producing drops: $loot / 4"
+[ "$loot" -ge 4 ] || { grep -n -i "loot" $LOG | tail -10; echo "creature loot tables are broken"; exit 1; }
 expected=$(( $(echo $ids | wc -w) + 1 ))
 echo "== summoned: $summoned / $expected"
 problems=$(grep -n "Exception\|Caused by\|ERROR.*dinosaurs\|WARN.*dinosaurs" $LOG | grep -v "No key layers" || true)
