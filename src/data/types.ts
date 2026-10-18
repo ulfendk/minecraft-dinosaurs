@@ -1,7 +1,7 @@
 import type { Rig } from '../model/rigs.js';
 import type { Palette } from '../texture/painter.js';
 
-export type Period = 'Permian' | 'Triassic' | 'Jurassic' | 'Cretaceous' | 'Paleogene' | 'Neogene';
+export type Period = 'Devonian' | 'Permian' | 'Triassic' | 'Jurassic' | 'Cretaceous' | 'Paleogene' | 'Neogene';
 export type Diet = 'carnivore' | 'herbivore' | 'piscivore' | 'omnivore' | 'insectivore';
 export type Temperament = 'passive' | 'skittish' | 'neutral' | 'aggressive';
 export type Habitat = 'land' | 'water' | 'air' | 'amphibious';

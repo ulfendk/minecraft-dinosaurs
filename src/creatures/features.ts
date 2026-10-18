@@ -7,13 +7,13 @@ import type { Rig } from '../model/rigs.js';
 const head = (r: Rig) => r.mb.get(r.head);
 const body = (r: Rig) => r.mb.get('body');
 
-/** Paired horns on the head. z is measured back from the snout tip (0 = tip). */
+/** Paired horns on the head. z is measured back from the snout tip (0 = tip). tilt>0 leans forward, splay>0 leans outward. */
 export function hornPair(r: Rig, o: { fromTip: number; up?: number; len: number; w?: number; tilt?: number; splay?: number; out?: number; mat?: Material }) {
   const w = o.w ?? 2;
   const z = r.a.snoutTip + o.fromTip;
   const y = r.a.headTop + (o.up ?? 0) - 1;
   const x = r.a.headW / 2 - w + (o.out ?? 0);
-  head(r).pair([x, y, z], [w, o.len, w], o.mat ?? 'horn', { rotation: [o.tilt ?? 50, 0, -(o.splay ?? 12)], pivot: [x + w / 2, y, z + w / 2] });
+  head(r).pair([x, y, z], [w, o.len, w], o.mat ?? 'horn', { rotation: [o.tilt ?? 50, 0, o.splay ?? 12], pivot: [x + w / 2, y, z + w / 2] });
 }
 
 /** Single nose horn on the snout. */
@@ -35,7 +35,7 @@ export function frill(r: Rig, o: { w: number; h: number; tilt?: number; spikes?:
     for (let i = 0; i < o.spikes; i++) {
       const fx = (i / Math.max(1, o.spikes - 1) - 0.5) * (o.w - 2);
       const ang = fx * 4;
-      h.box([fx - 1, y + o.h - 1, z], [2, o.spikeLen ?? 4, 2], 'horn', { rotation: [-(o.tilt ?? 40), 0, -ang], pivot: [fx, y, z] });
+      h.box([fx - 1, y + o.h - 1, z], [2, o.spikeLen ?? 4, 2], 'horn', { rotation: [-(o.tilt ?? 40), 0, ang], pivot: [fx, y, z] });
     }
   }
 }
@@ -53,7 +53,7 @@ export function tubeCrest(r: Rig, o: { len: number; w?: number; tilt?: number })
   const w = o.w ?? 3;
   const z = r.a.craniumZ0 + 1;
   const y = r.a.headTop - 2;
-  head(r).box([-w / 2, y, z], [w, w, o.len], 'accent', { rotation: [-(o.tilt ?? 28), 0, 0], pivot: [0, y + w / 2, z] });
+  head(r).box([-w / 2, y, z], [w, w, o.len], 'accent', { rotation: [o.tilt ?? 28, 0, 0], pivot: [0, y + w / 2, z] });
 }
 
 /** Dorsal sail along the back (Spinosaurus, Dimetrodon, Amargasaurus-ish). */

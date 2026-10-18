@@ -54,7 +54,7 @@ export function paint(model: Model, pal: Palette): PNG {
       pattern: hex(pal.pattern?.colour ?? pal.back),
       accent: hex(pal.accent),
       accent2: hex(pal.accent2 ?? pal.accent),
-      horn: hex(pal.horn ?? '#d8cfb4'),
+      horn: hex(pal.horn ?? '#b8a983'),
       claw: hex(pal.claw ?? '#3a3430'),
       eye: hex(pal.eye ?? '#e0a020'),
       mouth: hex(pal.mouth ?? '#8a3a3a'),
@@ -232,10 +232,12 @@ function texel(cube: Cube, f: FaceLayout, i: number, j: number, w: number, h: nu
       col = shade(col, g);
       break;
     }
-    case 'fin':
-      col = skinColour(cube, f, p, ctx);
-      if ((Math.floor(p[2]) & 1) === 0) col = darken(col, 0.08);
+    case 'fin': {
+      // flat colour (fins are built from many thin slabs; per-slab gradients would stripe them)
+      col = shade(mix(c.side, c.back, 0.6), g);
+      if (Math.sin(p[2] * 1.4 + p[1] * 0.7) > 0.8) col = darken(col, 0.08);
       break;
+    }
     case 'saddle': {
       col = hex('#6b3f1f');
       if (edge) col = hex('#a8743f');
@@ -322,15 +324,22 @@ function applyDecals(col: RGB, cube: Cube, p: Vec3, ctx: Ctx): RGB {
     const dz = (p[2] - d.center[2]) / d.radius[2];
     const dn = Math.sqrt(dx * dx + dy * dy + dz * dz);
     switch (d.kind) {
-      case 'eye':
+      case 'eye': {
+        const small = Math.min(d.radius[1], d.radius[2]) < 1;
+        if (small) {
+          // tiny eyes: a single dark texel with a hint of iris colour
+          if (Math.abs(p[1] - d.center[1]) < 0.55 && Math.abs(p[2] - d.center[2]) < 0.55 && Math.abs(dx) <= 1) col = mix(hex('#0d0b09'), ctx.c.eye, 0.25);
+          break;
+        }
         if (dn <= 1) {
           if (dn < 0.55) col = hex('#0d0b09');
           else col = ctx.c.eye;
           // glint on the upper front texel
           if (dy > 0.2 && dz < -0.1 && dn < 0.9) col = lighten(col, 0.55);
-        } else if (dn < 1.7 && dy > 0.35) col = darken(col, 0.3); // brow ridge
-        else if (dn < 1.35) col = darken(col, 0.18); // eye socket rim
+        } else if (dn < 1.6 && dy > 0.35) col = darken(col, 0.22); // brow ridge
+        else if (dn < 1.3) col = darken(col, 0.12); // eye socket rim
         break;
+      }
       case 'nostril':
         if (dn <= 1) col = darken(col, 0.55);
         break;

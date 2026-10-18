@@ -75,7 +75,7 @@ export function behaviorEntity(c: CreatureDef, ctx: EntityCtx): J {
       'minecraft:breathable': { total_supply: 15, suffocate_time: 0 },
       'minecraft:damage_sensor': { triggers: { cause: 'fall', deals_damage: 'no' } },
       'minecraft:behavior.float': { priority: 0 },
-      'minecraft:behavior.random_fly': { priority: 6, xz_dist: 24, y_dist: 8, y_offset: 2, speed_multiplier: 1.0, can_land_on_trees: true, avoid_damage_blocks: true },
+      'minecraft:behavior.random_fly': { priority: 6, xz_dist: 24, y_dist: 8, speed_multiplier: 1.0, can_land_on_trees: true },
     });
   } else if (swimmer) {
     Object.assign(comp, {

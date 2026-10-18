@@ -48,7 +48,7 @@ interface GeoBone {
 }
 
 export interface Pose {
-  [bone: string]: { rotation?: Vec3; position?: Vec3; hidden?: boolean };
+  [bone: string]: { rotation?: Vec3; position?: Vec3; hidden?: boolean; scale?: number };
 }
 
 interface Tri {
@@ -76,7 +76,9 @@ export function collectTris(bones: GeoBone[], pose: Pose = {}, hide: string[] = 
     ];
     const off = ps.position ?? [0, 0, 0];
     // Bedrock animation positions: x is mirrored relative to model space
-    const m = mul(pm, mul(T(pv[0] - off[0], pv[1] + off[1], pv[2] + off[2]), mul(bedrockRot(rot), T(-pv[0], -pv[1], -pv[2]))));
+    const k = ps.scale ?? 1;
+    const S: Mat4 = [k, 0, 0, 0, 0, k, 0, 0, 0, 0, k, 0, 0, 0, 0, 1];
+    const m = mul(pm, mul(T(pv[0] - off[0], pv[1] + off[1], pv[2] + off[2]), mul(bedrockRot(rot), mul(S, T(-pv[0], -pv[1], -pv[2])))));
     mats.set(b.name, m);
     return m;
   };

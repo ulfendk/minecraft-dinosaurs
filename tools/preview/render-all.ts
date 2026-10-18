@@ -16,7 +16,7 @@ function poseFor(x: Assembled, q: Record<string, number>, v: Record<string, numb
   const env = { q: { modified_move_speed: 0, modified_distance_moved: 0, life_time: 0, is_on_ground: 1, ...q }, v: { ...v } };
   const p = evaluatePose(x.anims, env, compile);
   const out: Pose = {};
-  for (const [b, t] of Object.entries(p)) out[b] = { rotation: t.rotation, position: t.position };
+  for (const [b, t] of Object.entries(p)) out[b] = { rotation: t.rotation, position: t.position, scale: t.scale };
   return out;
 }
 

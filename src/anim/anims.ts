@@ -103,8 +103,8 @@ export function buildAnimations(id: string, rig: Rig, scale: number): AnimSet {
       // lie down: legs fold under the body
       const sit: Record<string, BoneAnim> = { root: { position: [0, r(-h * 0.55), 0] } };
       for (const leg of rig.legs) {
-        sit[leg.chain[0]] = { rotation: [leg.front ? -70 : 62, 0, 0] };
-        sit[leg.chain[1]] = { rotation: [leg.front ? 128 : -118, 0, 0] };
+        sit[leg.chain[0]] = { rotation: [leg.front ? 70 : -60, 0, 0] };
+        sit[leg.chain[1]] = { rotation: [leg.front ? -120 : 110, 0, 0] };
       }
       add('sit', sit, 'query.is_sitting');
       break;
@@ -114,8 +114,8 @@ export function buildAnimations(id: string, rig: Rig, scale: number): AnimSet {
       const fly: Record<string, BoneAnim> = {};
       for (const w of rig.wings) {
         const sg = w.side > 0 ? 1 : -1;
-        ground[w.name] = { rotation: [0, -80 * sg, 28 * sg] };
-        if (w.tip) ground[w.tip] = { rotation: [0, 165 * sg, 0] };
+        ground[w.name] = { rotation: [0, -80 * sg, -80 * sg] };
+        if (w.tip) ground[w.tip] = { rotation: [0, 165 * sg, 0], scale: 0.3 };
         fly[w.name] = { rotation: [0, 0, `${-sg} * (math.sin(variable.lt * 300) * 32 + 4)`] };
         if (w.tip) fly[w.tip] = { rotation: [0, 0, `${-sg} * math.sin(variable.lt * 300 - 50) * 18`] };
       }
@@ -162,7 +162,7 @@ export function buildAnimations(id: string, rig: Rig, scale: number): AnimSet {
 /** Evaluate an animation set into a static pose for the previewer. */
 export function evaluatePose(set: AnimSet, env: { q: Record<string, number>; v: Record<string, number> }, compile: (e: Expr) => (env: any) => number) {
   for (const line of set.pre) compile(line)(env);
-  const pose: Record<string, { rotation: [number, number, number]; position: [number, number, number] }> = {};
+  const pose: Record<string, { rotation: [number, number, number]; position: [number, number, number]; scale?: number }> = {};
   for (const entry of set.animate) {
     const [name, cond] = typeof entry === 'string' ? [entry, undefined] : Object.entries(entry)[0];
     if (cond !== undefined && !compile(cond)(env)) continue;
@@ -172,6 +172,7 @@ export function evaluatePose(set: AnimSet, env: { q: Record<string, number>; v: 
       const p = (pose[bone] ??= { rotation: [0, 0, 0], position: [0, 0, 0] });
       ba.rotation?.forEach((e, i) => (p.rotation[i] += compile(e)(env)));
       ba.position?.forEach((e, i) => (p.position[i] += compile(e)(env)));
+      if (ba.scale !== undefined) p.scale = (p.scale ?? 1) * compile(ba.scale)(env);
     }
   }
   return pose;

@@ -279,6 +279,7 @@ export interface QuadSpec {
   neck: { len: number; w: number; h: number; angle: number; segments?: number; tipW?: number; tipH?: number };
   head: HeadSpec;
   headAngle?: number;
+  /** lift: per-segment pitch in degrees (accumulates along the tail; negative droops) */
   tail: { len: number; w?: number; h?: number; segments?: number; lift?: number; tipW?: number; tipH?: number };
   legs: { frontW: number; backW: number; sprawl?: number; footLen?: number; elbow?: number; knee?: number };
 }
