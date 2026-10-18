@@ -1,0 +1,9 @@
+node_modules/
+build/
+dist/
+site/
+*.mcaddon
+*.mcpack
+.DS_Store
+tools/scratch/
+.cache/

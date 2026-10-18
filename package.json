@@ -1,0 +1,33 @@
+{
+  "name": "minecraft-dinosaurs",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Prehistoric Dinosaurs add-on for Minecraft Bedrock (Java-ready data pipeline)",
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsx src/build.ts",
+    "preview": "tsx tools/preview/render-all.ts",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "package": "tsx src/package.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "@types/pngjs": "^6.0.5",
+    "ajv": "^8.20.0",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.3",
+    "vitest": "^5.0.5"
+  },
+  "dependencies": {
+    "@minecraft/server": "^2.9.0",
+    "@minecraft/server-ui": "^2.0.0",
+    "esbuild": "^0.28.2",
+    "fflate": "^0.8.3",
+    "pngjs": "^7.0.0"
+  }
+}
