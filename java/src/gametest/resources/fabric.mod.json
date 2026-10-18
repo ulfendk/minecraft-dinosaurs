@@ -4,6 +4,13 @@
   "version": "1.0.0",
   "name": "Prehistoric Dinosaurs screenshot test",
   "environment": "client",
-  "entrypoints": { "fabric-client-gametest": ["dk.ulfen.dinosaurs.gametest.ScreenshotTest"] },
-  "depends": { "dinosaurs": "*" }
+  "entrypoints": {
+    "fabric-client-gametest": [
+      "dk.ulfen.dinosaurs.gametest.ScreenshotTest",
+      "dk.ulfen.dinosaurs.gametest.GearScreenshotTest"
+    ]
+  },
+  "depends": {
+    "dinosaurs": "*"
+  }
 }
