@@ -4,6 +4,8 @@ A Minecraft **Bedrock** add-on with **50 dinosaurs**, **12 other prehistoric cre
 
 **[Download the latest release](https://github.com/ulfendk/minecraft-dinosaurs/releases/latest)** · **[Creature catalogue (GitHub Pages)](https://ulfendk.github.io/minecraft-dinosaurs/)**
 
+![All 62 creatures](docs/creatures.png)
+
 ## Contents
 
 | | |
