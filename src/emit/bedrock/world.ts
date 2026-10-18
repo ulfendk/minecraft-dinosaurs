@@ -8,6 +8,7 @@ import { toGeoJson } from '../../model/geo.js';
 import type { OutDir } from '../writer.js';
 import { buildBlocks, fenceGeometry } from './blocks.js';
 import { FORMAT, NS } from './constants.js';
+import { packVersion } from './manifest.js';
 import { EGG_ANIMATION, eggBehavior, eggClient, eggLoot, eggModel, eggTexture } from './eggs.js';
 import { buildItems, hasEgg } from './items.js';
 import { VEHICLES, vehicleAnimation, vehicleAssets, vehicleBehavior, vehicleClient, vehicleLoot } from './vehicles.js';
@@ -121,6 +122,7 @@ export async function emitWorld({ bp, rp, lang, assembled }: WorldCtx) {
 
   // ---- scripts (bundled), with generated data the scripts need
   const data = {
+    version: packVersion().join('.'),
     creatures: assembled.map((x) => ({
       id: x.def.id,
       name: x.def.name,

@@ -14,7 +14,7 @@ export function bpManifest() {
   return {
     format_version: 2,
     header: {
-      name: `${PACK_NAME} BP`,
+      name: `${PACK_NAME} BP v${version.join('.')}`,
       description: `Dinosaurs, prehistoric creatures, ancient plants and park gear. v${version.join('.')}`,
       uuid: uuids.bp.header,
       version,
@@ -38,7 +38,7 @@ export function rpManifest() {
   return {
     format_version: 2,
     header: {
-      name: `${PACK_NAME} RP`,
+      name: `${PACK_NAME} RP v${version.join('.')}`,
       description: `Models, textures and sounds for ${PACK_NAME}. v${version.join('.')}`,
       uuid: uuids.rp.header,
       version,

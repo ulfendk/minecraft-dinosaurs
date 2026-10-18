@@ -6,7 +6,7 @@ import { animationFile, clientEntity, renderControllers } from './emit/bedrock/c
 import { NS } from './emit/bedrock/constants.js';
 import { lootTable, saddledLoot, SADDLE_LOOT, soundEntry, spawnRule } from './emit/bedrock/creatureFiles.js';
 import { behaviorEntity } from './emit/bedrock/entity.js';
-import { bpManifest, rpManifest } from './emit/bedrock/manifest.js';
+import { bpManifest, packVersion, rpManifest } from './emit/bedrock/manifest.js';
 import { emitWorld } from './emit/bedrock/world.js';
 import { toGeoJson } from './model/geo.js';
 import { clean, OutDir } from './emit/writer.js';
@@ -52,7 +52,7 @@ export async function build(opts: { quiet?: boolean } = {}) {
   rp.json('sounds.json', { entity_sounds: { entities: sounds } });
   rp.write('texts/en_US.lang', lang.join('\n') + '\n');
   rp.json('texts/languages.json', ['en_US']);
-  bp.write('texts/en_US.lang', `pack.name=Prehistoric Dinosaurs BP\npack.description=Dinosaurs and prehistoric life\n`);
+  bp.write('texts/en_US.lang', `pack.name=Prehistoric Dinosaurs BP v${packVersion().join('.')}\npack.description=Dinosaurs and prehistoric life\n`);
   bp.json('texts/languages.json', ['en_US']);
   if (!opts.quiet) console.log(`built ${assembled.length} creatures, ${bp.files.length} BP files, ${rp.files.length} RP files`);
   return { bp, rp, assembled };

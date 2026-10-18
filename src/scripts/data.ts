@@ -1,5 +1,6 @@
 // Shape of the build-time data injected into the scripts bundle as __DINO_DATA__.
 export interface GuideData {
+  version: string;
   creatures: {
     id: string;
     name: string;

@@ -2,7 +2,7 @@
 
 A Minecraft **Bedrock** add-on with **50 dinosaurs**, **12 other prehistoric creatures**, ancient plants, a **Prehistoric Jungle** biome, tameable and rideable dinosaurs, **electric fences** and **safari vehicles**. Every model, texture, animation and pack file is generated from code in this repository. The data model is engine-neutral so a Java edition port can reuse it (see [Java support](#java-support)).
 
-**[Download the latest release](https://github.com/ulfendk/minecraft-dinosaurs/releases/latest)** · **[Creature catalogue (GitHub Pages)](https://ulfendk.github.io/minecraft-dinosaurs/)**
+**[Download the latest release](https://github.com/ulfendk/minecraft-dinosaurs/releases/latest)** · **[Creature catalogue (GitHub Pages)](https://ulfendk.github.io/minecraft-dinosaurs/)** · **[Dansk side](https://ulfendk.github.io/minecraft-dinosaurs/da/)**
 
 ![All 62 creatures](docs/creatures.png)
 

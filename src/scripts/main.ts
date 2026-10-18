@@ -125,7 +125,7 @@ function setGenerator(block: Block, on: boolean) {
   updateAround(block.dimension, block.location);
 }
 
-system.run(() => console.log(`[dino] scripts loaded (${DATA.creatures.length} creatures)`));
+system.run(() => console.log(`[dino] scripts loaded v${DATA.version} (${DATA.creatures.length} creatures)`));
 
 // ---------------------------------------------------------------- custom block components
 
@@ -308,7 +308,7 @@ function textPage(player: Player, title: string, body: string) {
 
 function showGuide(player: Player) {
   const groups = [...new Set(DATA.creatures.map((c) => c.group))];
-  const form = new ActionFormData().title('Dino Field Guide').body(`§7${DATA.creatures.length} prehistoric creatures, ancient plants and park gear.`);
+  const form = new ActionFormData().title(`Dino Field Guide v${DATA.version}`).body(`§7${DATA.creatures.length} prehistoric creatures, ancient plants and park gear.`);
   for (const g of groups) form.button(GROUP_NAMES[g] ?? g);
   form.button('Ancient plants & trees');
   form.button('Taming, riding & eggs');
