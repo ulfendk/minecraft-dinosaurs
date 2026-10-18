@@ -110,6 +110,30 @@ function updateNetwork(dim: Dimension, start: Vector3) {
   }
 }
 
+// wires: each fence links to neighbouring fences and generators on the four sides
+const LINKS: [string, Vector3][] = [
+  ['dino:link_n', { x: 0, y: 0, z: -1 }],
+  ['dino:link_e', { x: 1, y: 0, z: 0 }],
+  ['dino:link_s', { x: 0, y: 0, z: 1 }],
+  ['dino:link_w', { x: -1, y: 0, z: 0 }],
+];
+
+function relink(dim: Dimension, at: Vector3) {
+  const b = safeBlock(dim, at);
+  if (b?.typeId !== FENCE) return;
+  let perm = b.permutation;
+  for (const [state, d] of LINKS) {
+    const n = safeBlock(dim, add(at, d))?.typeId;
+    perm = perm.withState(state as never, (n === FENCE || n === GENERATOR ? 'yes' : 'no') as never);
+  }
+  if (perm !== b.permutation) b.setPermutation(perm);
+}
+
+function relinkAround(dim: Dimension, at: Vector3) {
+  relink(dim, at);
+  for (const [, d] of LINKS) relink(dim, add(at, d));
+}
+
 function updateAround(dim: Dimension, at: Vector3) {
   for (const d of DIRS) {
     const n = add(at, d);
@@ -149,14 +173,27 @@ system.beforeEvents.startup.subscribe(({ blockComponentRegistry }) => {
   });
   blockComponentRegistry.registerCustomComponent(`${NS}:electric_fence`, {
     onPlace({ block }) {
-      system.run(() => updateNetwork(block.dimension, block.location));
+      const dim = block.dimension;
+      const at = block.location;
+      system.run(() => {
+        relinkAround(dim, at);
+        updateNetwork(dim, at);
+      });
     },
     onPlayerBreak({ block, dimension }) {
       const at = block.location;
-      system.run(() => updateAround(dimension, at));
+      system.run(() => {
+        relinkAround(dimension, at);
+        updateAround(dimension, at);
+      });
     },
   });
   blockComponentRegistry.registerCustomComponent(`${NS}:fence_generator`, {
+    onPlace({ block }) {
+      const dim = block.dimension;
+      const at = block.location;
+      system.run(() => relinkAround(dim, at));
+    },
     onPlayerInteract({ block, player }) {
       const on = block.permutation.getState('dino:on' as never) !== 'on';
       setGenerator(block, on);
@@ -167,7 +204,10 @@ system.beforeEvents.startup.subscribe(({ blockComponentRegistry }) => {
     },
     onPlayerBreak({ block, dimension }) {
       const at = block.location;
-      system.run(() => updateAround(dimension, at));
+      system.run(() => {
+        relinkAround(dimension, at);
+        updateAround(dimension, at);
+      });
     },
   });
 });

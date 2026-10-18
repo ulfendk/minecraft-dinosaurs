@@ -49,6 +49,13 @@ for i in $(seq 1 60); do
   if docker logs dino-bds 2>&1 | grep -q "Object successfully summoned"; then break; fi
 done
 while IFS= read -r cmd; do docker exec dino-bds send-command "$cmd" >/dev/null 2>&1 || true; done < "$DATA/commands.txt"
+# electric fences must link to each other (and only to fences/generators)
+fcmd() { docker exec dino-bds send-command "$1" >/dev/null 2>&1 || true; sleep 1; }
+fcmd "setblock 20 160 20 dino:electric_fence"; fcmd "setblock 21 160 20 dino:electric_fence"; fcmd "setblock 22 160 20 dirt"
+sleep 2
+fcmd 'testforblock 20 160 20 dino:electric_fence ["dino:link_e"="yes"]'
+fcmd 'testforblock 21 160 20 dino:electric_fence ["dino:link_w"="yes"]'
+fcmd 'testforblock 21 160 20 dino:electric_fence ["dino:link_e"="no"]'
 sleep "$RUN_FOR"
 docker exec dino-bds send-command "kill @e[type=!player]" >/dev/null 2>&1 || true
 sleep 3
@@ -62,5 +69,8 @@ echo "== content log problems: $(wc -l < "$DATA/problems.log" | tr -d ' ')"
 head -100 "$DATA/problems.log"
 summoned=$(grep -c "Object successfully summoned" "$DATA/server-output.log" || true)
 echo "== summoned: $summoned entities"
+fence_ok=$(grep -c "Successfully found the block at 2[01],160,20" "$DATA/server-output.log" || true)
+echo "== fence link checks passed: $fence_ok/3"
+[ "$fence_ok" = "3" ] || { echo "fence linking broken"; exit 1; }
 grep -q "\[dino\] scripts loaded" "$DATA/server-output.log" && echo "== scripts: loaded" || { echo "== scripts: NOT loaded"; exit 1; }
 [ -s "$DATA/problems.log" ] && exit 1 || exit 0

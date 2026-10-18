@@ -186,10 +186,10 @@ export function buildBlocks(): BlockOut[] {
   const fenceVis = {
     post: 1,
     cap: 1,
-    wire_n: "q.block_state('minecraft:connection_north')",
-    wire_e: "q.block_state('minecraft:connection_east')",
-    wire_s: "q.block_state('minecraft:connection_south')",
-    wire_w: "q.block_state('minecraft:connection_west')",
+    wire_n: "q.block_state('dino:link_n') == 'yes'",
+    wire_e: "q.block_state('dino:link_e') == 'yes'",
+    wire_s: "q.block_state('dino:link_s') == 'yes'",
+    wire_w: "q.block_state('dino:link_w') == 'yes'",
   };
   out.push({
     id: 'electric_fence',
@@ -201,8 +201,8 @@ export function buildBlocks(): BlockOut[] {
       'electric_fence',
       {
         menu_category: { category: 'construction' },
-        states: { 'dino:powered': ['off', 'on'] },
-        traits: { 'minecraft:connection': { enabled_states: ['minecraft:cardinal_connections'] } },
+        // links are kept up to date by the scripts (only to other fences and generators, never to terrain)
+        states: { 'dino:powered': ['off', 'on'], 'dino:link_n': ['no', 'yes'], 'dino:link_e': ['no', 'yes'], 'dino:link_s': ['no', 'yes'], 'dino:link_w': ['no', 'yes'] },
       },
       {
         ...display('electric_fence'),
@@ -214,7 +214,6 @@ export function buildBlocks(): BlockOut[] {
         // 1.5 blocks tall like vanilla fences, so creatures cannot step over it
         'minecraft:collision_box': { origin: [-8, 0, -8], size: [16, 24, 16] },
         'minecraft:selection_box': { origin: [-3, 0, -3], size: [6, 16, 6] },
-        'minecraft:connection_rule': { accepts_connections_from: 'all' },
         'minecraft:light_dampening': 0,
         'minecraft:loot': 'loot_tables/blocks/electric_fence.json',
         'dino:electric_fence': {},
@@ -280,8 +279,9 @@ export function fenceGeometry() {
           },
           wires('wire_n', [1, 1, 6], ys.map((y) => [-0.5, y, -8])),
           wires('wire_s', [1, 1, 6], ys.map((y) => [-0.5, y, 2])),
-          wires('wire_e', [6, 1, 1], ys.map((y) => [2, y, -0.5])),
-          wires('wire_w', [6, 1, 1], ys.map((y) => [-8, y, -0.5])),
+          // Bedrock geometry mirrors X (Blockbench flips it back): file -X is east in the world
+          wires('wire_e', [6, 1, 1], ys.map((y) => [-8, y, -0.5])),
+          wires('wire_w', [6, 1, 1], ys.map((y) => [2, y, -0.5])),
         ],
       },
     ],
