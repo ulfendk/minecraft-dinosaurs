@@ -83,7 +83,7 @@ function paintFace(png: PNG, cube: Cube, f: FaceLayout, ctx: Ctx) {
       png.data[k] = clamp(Math.round(col[0]), 0, 255);
       png.data[k + 1] = clamp(Math.round(col[1]), 0, 255);
       png.data[k + 2] = clamp(Math.round(col[2]), 0, 255);
-      png.data[k + 3] = 255;
+      png.data[k + 3] = cube.mat === 'glass' ? 120 : 255;
     }
 }
 

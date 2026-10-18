@@ -156,6 +156,11 @@ export function behaviorEntity(c: CreatureDef, ctx: EntityCtx): J {
     wild['minecraft:behavior.nearest_attackable_target'] = { priority: 3, must_see: true, reselect_targets: true, within_radius: 24, entity_types: targets };
   }
   g['dino:wild'] = wild;
+  // freshly hatched babies imprint on whoever placed the egg (scripts call tame()), or on the first feeder
+  g['dino:hatchling'] = {
+    'minecraft:tameable': { probability: 1.0, tame_items: c.food, tame_event: { event: 'dino:on_tame', target: 'self' } },
+    'minecraft:leashable': { presets: [{ soft_distance: 4, hard_distance: 6, max_distance: 10 }] },
+  };
 
   // ---------------------------------------------------------------- tame
   const tame: J = {
@@ -265,8 +270,7 @@ export function behaviorEntity(c: CreatureDef, ctx: EntityCtx): J {
     'dino:spawn_adult': { add: { component_groups: ['dino:adult', 'dino:wild'] } },
     'dino:spawn_baby': { add: { component_groups: ['dino:baby', 'dino:wild'] } },
     'minecraft:entity_born': { add: { component_groups: ['dino:baby', 'dino:tame'] } },
-    'dino:hatch_tame': { remove: { component_groups: ['dino:adult', 'dino:wild'] }, add: { component_groups: ['dino:baby', 'dino:tame'] } },
-    'dino:hatch_wild': { remove: { component_groups: ['dino:adult'] }, add: { component_groups: ['dino:baby', 'dino:wild'] } },
+    'dino:hatch_egg': { remove: { component_groups: ['dino:adult', 'dino:wild'] }, add: { component_groups: ['dino:baby', 'dino:hatchling'] } },
     'dino:grow_up': {
       sequence: [
         { remove: { component_groups: ['dino:baby'] }, add: { component_groups: ['dino:adult'] } },
@@ -275,7 +279,7 @@ export function behaviorEntity(c: CreatureDef, ctx: EntityCtx): J {
     },
     'dino:on_tame': {
       sequence: [
-        { remove: { component_groups: ['dino:wild'] }, add: { component_groups: ['dino:tame'] } },
+        { remove: { component_groups: ['dino:wild', 'dino:hatchling'] }, add: { component_groups: ['dino:tame'] } },
         ...(tameAdultGroups.length ? [{ filters: { test: 'has_component', operator: '!=', value: 'minecraft:is_baby' }, add: { component_groups: tameAdultGroups } }] : []),
       ],
     },

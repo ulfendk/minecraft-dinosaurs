@@ -180,10 +180,15 @@ export const VEHICLES: VehicleDef[] = [
       c.box([7, 13, -23.5], [4, 2, 1], 'lamp');
       // cabin: pillars + glass + white roof with glass bubble
       c.box([-12, 19, -11], [24, 11, 1], 'glass');
-      c.box([-13, 17, -10], [1, 14, 33], 'paint');
-      c.box([12, 17, -10], [1, 14, 33], 'paint');
-      c.box([-12.8, 21, -9], [0, 8, 30], 'glass');
-      c.box([12.8, 21, -9], [0, 8, 30], 'glass');
+      // lower door panels, window pillars and side glass
+      c.box([-13, 17, -10], [1, 4, 33], 'paint');
+      c.box([12, 17, -10], [1, 4, 33], 'paint');
+      for (const z of [-10, 5, 20]) {
+        c.box([-13, 21, z], [1, 9, 2], 'paint');
+        c.box([12, 21, z], [1, 9, 2], 'paint');
+      }
+      c.box([-12.6, 21, -8], [0, 9, 28], 'glass');
+      c.box([12.6, 21, -8], [0, 9, 28], 'glass');
       c.box([-12, 17, 22], [24, 14, 1], 'paint');
       c.box([-10, 23, 22.2], [20, 6, 1], 'glass');
       c.box([-13, 30, -11], [26, 2, 34], 'paint');
@@ -227,8 +232,11 @@ export const VEHICLES: VehicleDef[] = [
         const s = Math.max(2, Math.round(r * 2));
         shell.box([-s / 2, 15 + y0, -s / 2], [s, Math.round((2 * R) / 10), s], 'glass');
       }
-      // metal equator ring
-      shell.box([-15.5, 14, -15.5], [31, 2, 31], 'chrome', { inflate: 0.1 });
+      // metal equator ring (four bars, so the sphere stays see-through)
+      shell.box([-15.5, 14, -15.5], [31, 2, 2], 'chrome', { inflate: 0.1 });
+      shell.box([-15.5, 14, 13.5], [31, 2, 2], 'chrome', { inflate: 0.1 });
+      shell.box([-15.5, 14, -13.5], [2, 2, 27], 'chrome', { inflate: 0.1 });
+      shell.box([13.5, 14, -13.5], [2, 2, 27], 'chrome', { inflate: 0.1 });
       // inner gimballed cabin stays upright
       const cab = mb.bone('cabin', 'chassis', [0, 15, 0]);
       cab.box([-9, 3, -6], [18, 3, 12], 'paint2');

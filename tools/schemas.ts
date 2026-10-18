@@ -22,6 +22,7 @@ export const CHECKS: Check[] = [
   { dir: 'dinosaurs_BP/items', schema: '/server/item/1.26.30/ItemDocument.json', pick: (d) => d['minecraft:item'] },
   { dir: 'dinosaurs_BP/spawn_rules', schema: '/server/spawn/1.21.50/Spawn Rules.json', pick: (d) => d['minecraft:spawn_rules'] },
   { dir: 'dinosaurs_BP/biomes', schema: '/server/biome/beta/Biome Document.json', pick: (d) => d },
+  { dir: 'dinosaurs_RP/biomes', schema: '/client/biome/1.21.130/Client Biome Document.json', pick: (d) => d },
 ];
 
 export function loadAjv() {

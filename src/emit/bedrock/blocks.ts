@@ -42,7 +42,7 @@ export function buildBlocks(): BlockOut[] {
         {
           ...display(p.id),
           'minecraft:geometry': 'minecraft:geometry.cross',
-          'minecraft:material_instances': { '*': { texture: key, render_method: 'alpha_test', ambient_occlusion: false, face_dimming: false } },
+          'minecraft:material_instances': { '*': { texture: key, render_method: 'alpha_test', ambient_occlusion: 0, face_dimming: false } },
           'minecraft:collision_box': false,
           'minecraft:selection_box': { origin: [-6, 0, -6], size: [12, p.height, 12] },
           'minecraft:destructible_by_mining': { seconds_to_destroy: 0 },
@@ -77,8 +77,7 @@ export function buildBlocks(): BlockOut[] {
           'minecraft:map_color': t.wood.bark,
           'minecraft:geometry': 'minecraft:geometry.full_block',
           'minecraft:material_instances': { '*': { texture: k('log_side') }, up: { texture: k('log_top') }, down: { texture: k('log_top') } },
-          'tag:wood': {},
-          'tag:log': {},
+          'minecraft:tags': ['minecraft:is_axe_item_destructible', 'dino:log'],
         },
         [
           { condition: "q.block_state('minecraft:block_face') == 'east' || q.block_state('minecraft:block_face') == 'west'", components: { 'minecraft:transformation': { rotation: [0, 0, 90] } } },
@@ -102,7 +101,7 @@ export function buildBlocks(): BlockOut[] {
           'minecraft:map_color': t.wood.wood,
           'minecraft:geometry': 'minecraft:geometry.full_block',
           'minecraft:material_instances': { '*': { texture: k('planks') } },
-          'tag:wood': {},
+          'minecraft:tags': ['minecraft:is_axe_item_destructible', 'dino:planks'],
         },
       ),
     });
@@ -120,7 +119,7 @@ export function buildBlocks(): BlockOut[] {
       },
       json: block(
         `${t.id}_leaves`,
-        { menu_category: { category: 'nature', group: 'minecraft:itemGroup.name.leaves' }, states: { 'dino:natural': [false, true] } },
+        { menu_category: { category: 'nature', group: 'minecraft:itemGroup.name.leaves' }, states: { 'dino:natural': ['no', 'yes'] } },
         {
           ...display(`${t.id}_leaves`),
           'minecraft:destructible_by_mining': { seconds_to_destroy: 0.3 },
@@ -130,9 +129,8 @@ export function buildBlocks(): BlockOut[] {
           'minecraft:geometry': { identifier: 'minecraft:geometry.full_block', culling_layer: 'minecraft:culling_layer.leaves' },
           'minecraft:material_instances': { '*': { texture: k('leaves'), render_method: 'alpha_test_single_sided' } },
           'minecraft:loot': `loot_tables/blocks/${t.id}_leaves.json`,
-          'minecraft:random_ticking': { on_tick: { event: 'dino:noop', condition: '0' } },
           'dino:leaves': {},
-          'tag:leaves': {},
+          'minecraft:tags': ['minecraft:is_hoe_item_destructible', 'dino:leaves'],
         },
       ),
     });
@@ -147,7 +145,7 @@ export function buildBlocks(): BlockOut[] {
         {
           ...display(`${t.id}_sapling`),
           'minecraft:geometry': 'minecraft:geometry.cross',
-          'minecraft:material_instances': { '*': { texture: k('sapling'), render_method: 'alpha_test', ambient_occlusion: false, face_dimming: false } },
+          'minecraft:material_instances': { '*': { texture: k('sapling'), render_method: 'alpha_test', ambient_occlusion: 0, face_dimming: false } },
           'minecraft:collision_box': false,
           'minecraft:selection_box': { origin: [-5, 0, -5], size: [10, 13, 10] },
           'minecraft:destructible_by_mining': { seconds_to_destroy: 0 },
@@ -176,7 +174,7 @@ export function buildBlocks(): BlockOut[] {
         'minecraft:geometry': 'minecraft:geometry.full_block',
         'minecraft:material_instances': { '*': { texture: `${NS}_${id}` } },
         'minecraft:loot': `loot_tables/blocks/${id}.json`,
-        'tag:stone': {},
+        'minecraft:tags': ['minecraft:is_pickaxe_item_destructible'],
       }),
     });
   mineral('fossil_block', 'Fossil Block', fossilTexture(), { pools: [{ rolls: 1, entries: [{ type: 'item', name: `${NS}:fossil_fragment`, weight: 1, functions: [{ function: 'set_count', count: { min: 1, max: 3 } }] }] }] }, 3, '#c9bfa8');
@@ -185,14 +183,14 @@ export function buildBlocks(): BlockOut[] {
 
   // ---- park: electric fence (2-block tall, connects like fences) and its generator
   const ft = fenceTextures();
-  const fenceVis = (part: 'bottom' | 'top') => ({
-    post: true,
-    cap: part === 'top',
+  const fenceVis = {
+    post: 1,
+    cap: "q.block_state('minecraft:multi_block_part') == 1",
     wire_n: "q.block_state('minecraft:connection_north')",
     wire_e: "q.block_state('minecraft:connection_east')",
     wire_s: "q.block_state('minecraft:connection_south')",
     wire_w: "q.block_state('minecraft:connection_west')",
-  });
+  };
   out.push({
     id: 'electric_fence',
     name: 'Electric Fence',
@@ -203,7 +201,7 @@ export function buildBlocks(): BlockOut[] {
       'electric_fence',
       {
         menu_category: { category: 'construction' },
-        states: { 'dino:powered': [false, true] },
+        states: { 'dino:powered': ['off', 'on'] },
         traits: {
           'minecraft:connection': { enabled_states: ['minecraft:cardinal_connections'] },
           'minecraft:multi_block': { enabled_states: ['minecraft:multi_block_part'], parts: 2, direction: 'up' },
@@ -214,7 +212,7 @@ export function buildBlocks(): BlockOut[] {
         'minecraft:destructible_by_mining': { seconds_to_destroy: 4 },
         'minecraft:destructible_by_explosion': { explosion_resistance: 20 },
         'minecraft:map_color': '#5a5f66',
-        'minecraft:geometry': { identifier: 'geometry.dino.electric_fence', bone_visibility: fenceVis('bottom') },
+        'minecraft:geometry': { identifier: 'geometry.dino.electric_fence', bone_visibility: fenceVis },
         'minecraft:material_instances': { '*': { texture: `${NS}_electric_fence`, render_method: 'alpha_test' } },
         'minecraft:collision_box': { origin: [-8, 0, -8], size: [16, 16, 16] },
         'minecraft:selection_box': { origin: [-8, 0, -8], size: [16, 16, 16] },
@@ -224,8 +222,8 @@ export function buildBlocks(): BlockOut[] {
         'dino:electric_fence': {},
       },
       [
-        { condition: "q.block_state('minecraft:multi_block_part') == 1", components: { 'minecraft:geometry': { identifier: 'geometry.dino.electric_fence', bone_visibility: fenceVis('top') }, 'minecraft:loot': 'loot_tables/empty.json' } },
-        { condition: "q.block_state('dino:powered')", components: { 'minecraft:material_instances': { '*': { texture: `${NS}_electric_fence_on`, render_method: 'alpha_test' } }, 'minecraft:light_emission': 4 } },
+        { condition: "q.block_state('minecraft:multi_block_part') == 1", components: { 'minecraft:loot': 'loot_tables/empty.json' } },
+        { condition: "q.block_state('dino:powered') == 'on'", components: { 'minecraft:material_instances': { '*': { texture: `${NS}_electric_fence_on`, render_method: 'alpha_test' } }, 'minecraft:light_emission': 4 } },
       ],
     ),
   });
@@ -238,7 +236,7 @@ export function buildBlocks(): BlockOut[] {
     loot: selfLoot('fence_generator'),
     json: block(
       'fence_generator',
-      { menu_category: { category: 'items' }, states: { 'dino:on': [false, true] } },
+      { menu_category: { category: 'items' }, states: { 'dino:on': ['off', 'on'] } },
       {
         ...display('fence_generator'),
         'minecraft:destructible_by_mining': { seconds_to_destroy: 4 },
@@ -250,7 +248,7 @@ export function buildBlocks(): BlockOut[] {
         'minecraft:loot': 'loot_tables/blocks/fence_generator.json',
         'dino:fence_generator': {},
       },
-      [{ condition: "q.block_state('dino:on')", components: { 'minecraft:material_instances': { '*': { texture: `${NS}_generator_side_on` }, up: { texture: `${NS}_generator_top` }, down: { texture: `${NS}_generator_top` } }, 'minecraft:light_emission': 7 } }],
+      [{ condition: "q.block_state('dino:on') == 'on'", components: { 'minecraft:material_instances': { '*': { texture: `${NS}_generator_side_on` }, up: { texture: `${NS}_generator_top` }, down: { texture: `${NS}_generator_top` } }, 'minecraft:light_emission': 7 } }],
     ),
   });
   return out;

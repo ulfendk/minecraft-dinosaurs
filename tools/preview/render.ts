@@ -163,37 +163,45 @@ export function renderView(tris: Tri[], tex: PNG, view: View, size: number, geoT
   const tw = tex.width, th = tex.height;
   const su = tw / geoTw, sv = th / geoTh;
 
-  proj.forEach((tp, ti) => {
-    const t = tris[ti];
-    const [a, b, c] = tp.map(toScreen);
-    const area = (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]);
-    if (Math.abs(area) < 1e-9) return;
-    const x0 = Math.max(0, Math.floor(Math.min(a[0], b[0], c[0])));
-    const x1 = Math.min(size - 1, Math.ceil(Math.max(a[0], b[0], c[0])));
-    const y0 = Math.max(0, Math.floor(Math.min(a[1], b[1], c[1])));
-    const y1 = Math.min(size - 1, Math.ceil(Math.max(a[1], b[1], c[1])));
-    for (let y = y0; y <= y1; y++)
-      for (let x = x0; x <= x1; x++) {
-        const px = x + 0.5, py = y + 0.5;
-        const w0 = ((b[0] - px) * (c[1] - py) - (b[1] - py) * (c[0] - px)) / area;
-        const w1 = ((c[0] - px) * (a[1] - py) - (c[1] - py) * (a[0] - px)) / area;
-        const w2 = 1 - w0 - w1;
-        if (w0 < 0 || w1 < 0 || w2 < 0) continue;
-        const z = w0 * a[2] + w1 * b[2] + w2 * c[2];
-        const idx = y * size + x;
-        if (z >= zbuf[idx]) continue;
-        const u = w0 * t.uv[0][0] + w1 * t.uv[1][0] + w2 * t.uv[2][0];
-        const v = w0 * t.uv[0][1] + w1 * t.uv[1][1] + w2 * t.uv[2][1];
-        const tx = Math.min(tw - 1, Math.max(0, Math.floor(u * su - 1e-4)));
-        const ty = Math.min(th - 1, Math.max(0, Math.floor(v * sv - 1e-4)));
-        const ti4 = (ty * tw + tx) * 4;
-        if (tex.data[ti4 + 3] < 128) continue;
-        zbuf[idx] = z;
-        out.data[idx * 4] = Math.min(255, tex.data[ti4] * t.shade);
-        out.data[idx * 4 + 1] = Math.min(255, tex.data[ti4 + 1] * t.shade);
-        out.data[idx * 4 + 2] = Math.min(255, tex.data[ti4 + 2] * t.shade);
-      }
-  });
+  const raster = (translucent: boolean) =>
+    proj.forEach((tp, ti) => {
+      const t = tris[ti];
+      const [a, b, c] = tp.map(toScreen);
+      const area = (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]);
+      if (Math.abs(area) < 1e-9) return;
+      const x0 = Math.max(0, Math.floor(Math.min(a[0], b[0], c[0])));
+      const x1 = Math.min(size - 1, Math.ceil(Math.max(a[0], b[0], c[0])));
+      const y0 = Math.max(0, Math.floor(Math.min(a[1], b[1], c[1])));
+      const y1 = Math.min(size - 1, Math.ceil(Math.max(a[1], b[1], c[1])));
+      for (let y = y0; y <= y1; y++)
+        for (let x = x0; x <= x1; x++) {
+          const px = x + 0.5, py = y + 0.5;
+          const w0 = ((b[0] - px) * (c[1] - py) - (b[1] - py) * (c[0] - px)) / area;
+          const w1 = ((c[0] - px) * (a[1] - py) - (c[1] - py) * (a[0] - px)) / area;
+          const w2 = 1 - w0 - w1;
+          if (w0 < 0 || w1 < 0 || w2 < 0) continue;
+          const z = w0 * a[2] + w1 * b[2] + w2 * c[2];
+          const idx = y * size + x;
+          if (z >= zbuf[idx]) continue;
+          const u = w0 * t.uv[0][0] + w1 * t.uv[1][0] + w2 * t.uv[2][0];
+          const v = w0 * t.uv[0][1] + w1 * t.uv[1][1] + w2 * t.uv[2][1];
+          const tx = Math.min(tw - 1, Math.max(0, Math.floor(u * su - 1e-4)));
+          const ty = Math.min(th - 1, Math.max(0, Math.floor(v * sv - 1e-4)));
+          const ti4 = (ty * tw + tx) * 4;
+          const alpha = tex.data[ti4 + 3];
+          if (alpha < 8) continue;
+          const isTrans = alpha < 250;
+          if (isTrans !== translucent) continue;
+          const k = alpha / 255;
+          if (!translucent) zbuf[idx] = z;
+          for (let ch = 0; ch < 3; ch++) {
+            const src = Math.min(255, tex.data[ti4 + ch] * t.shade);
+            out.data[idx * 4 + ch] = translucent ? out.data[idx * 4 + ch] * (1 - k) + src * k : src;
+          }
+        }
+    });
+  raster(false);
+  raster(true);
   return out;
 }
 
