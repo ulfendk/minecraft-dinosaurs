@@ -2,7 +2,9 @@ plugins {
 	id 'net.fabricmc.fabric-loom' version "${loom_version}"
 }
 
-version = System.getenv('PACK_VERSION') ?: project.version
+// The mod version comes from package.json (or PACK_VERSION in CI) plus the Minecraft version, e.g. 0.5.0+26.3
+def packageJson = new groovy.json.JsonSlurper().parse(file('../package.json'))
+version = "${System.getenv('PACK_VERSION') ?: packageJson.version}+${project.minecraft_version}"
 base { archivesName = 'prehistoric-dinosaurs-fabric' }
 
 repositories {

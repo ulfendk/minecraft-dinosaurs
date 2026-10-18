@@ -2,7 +2,7 @@
 
 A Minecraft mod for **Bedrock** and **Java** (Fabric) with **50 dinosaurs**, **12 other prehistoric creatures**, ancient plants, a **Prehistoric Jungle** biome, tameable and rideable dinosaurs, **electric fences** and **safari vehicles**. Every model, texture, animation and pack file is generated from code in this repository. One set of definitions drives both editions (see [Java Edition](#java-edition)).
 
-**[Download the latest release](https://github.com/ulfendk/minecraft-dinosaurs/releases/latest)** · **[Creature catalogue (GitHub Pages)](https://ulfendk.github.io/minecraft-dinosaurs/)** · **[Dansk side](https://ulfendk.github.io/minecraft-dinosaurs/da/)**
+**Download:** [Bedrock (.mcaddon)](https://github.com/ulfendk/minecraft-dinosaurs/releases/latest/download/prehistoric-dinosaurs.mcaddon) · [Java/Fabric (.jar)](https://github.com/ulfendk/minecraft-dinosaurs/releases/latest/download/prehistoric-dinosaurs-fabric.jar) · [All releases](https://github.com/ulfendk/minecraft-dinosaurs/releases) · **[Creature catalogue (GitHub Pages)](https://ulfendk.github.io/minecraft-dinosaurs/)** · **[Dansk side](https://ulfendk.github.io/minecraft-dinosaurs/da/)**
 
 ![All 62 creatures](docs/creatures.png)
 
@@ -88,7 +88,7 @@ A Fabric mod for **Minecraft Java 26.3** is built from the same creature definit
 - [Fabric API](https://modrinth.com/mod/fabric-api)
 - [GeckoLib](https://modrinth.com/mod/geckolib) 5.5+
 
-To install it, download `prehistoric-dinosaurs-fabric-<version>.jar` from [Releases](https://github.com/ulfendk/minecraft-dinosaurs/releases/latest) and put it in your `mods` folder.
+To install it, download `prehistoric-dinosaurs-fabric-<version>+26.3.jar` from [Releases](https://github.com/ulfendk/minecraft-dinosaurs/releases/latest) and put it in your `mods` folder.
 
 **What's the same as Bedrock:**
 - all 62 creatures with the same models, textures and animations
@@ -112,7 +112,7 @@ To install it, download `prehistoric-dinosaurs-fabric-<version>.jar` from [Relea
 ```bash
 npm run build:java
 cd java
-./gradlew build             # → build/libs/prehistoric-dinosaurs-fabric-<version>.jar
+./gradlew build             # → build/libs/prehistoric-dinosaurs-fabric-<version>+26.3.jar
 bash smoke-server.sh        # Fabric dedicated server: summons every creature
 ./gradlew runClientGameTest # real game client: screenshots of every creature
 ```

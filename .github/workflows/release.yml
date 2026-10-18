@@ -39,7 +39,10 @@ jobs:
           npm run build:java
           (cd java && PACK_VERSION="${GITHUB_REF_NAME#v}" ./gradlew --no-daemon build)
           bash java/smoke-server.sh
-          cp java/build/libs/prehistoric-dinosaurs-fabric-${GITHUB_REF_NAME#v}.jar dist/
+          cp "java/build/libs/prehistoric-dinosaurs-fabric-${GITHUB_REF_NAME#v}+26.3.jar" dist/
+          # unversioned copies so https://github.com/<repo>/releases/latest/download/<file> always works
+          cp "dist/prehistoric-dinosaurs-${GITHUB_REF_NAME#v}.mcaddon" dist/prehistoric-dinosaurs.mcaddon
+          cp "dist/prehistoric-dinosaurs-fabric-${GITHUB_REF_NAME#v}+26.3.jar" dist/prehistoric-dinosaurs-fabric.jar
       - name: Write release notes
         run: |
           prev="$(git describe --tags --abbrev=0 "${GITHUB_REF_NAME}^" 2>/dev/null || true)"
@@ -53,7 +56,7 @@ jobs:
             echo "## Install – Java Edition"
             echo
             echo "1. Install [Fabric Loader](https://fabricmc.net/use/) for Minecraft Java 26.3, plus [Fabric API](https://modrinth.com/mod/fabric-api) and [GeckoLib](https://modrinth.com/mod/geckolib) for 26.3."
-            echo "2. Put **prehistoric-dinosaurs-fabric-${GITHUB_REF_NAME#v}.jar** in your \`mods\` folder."
+            echo "2. Put **prehistoric-dinosaurs-fabric-${GITHUB_REF_NAME#v}+26.3.jar** in your \`mods\` folder."
             echo
             min="$(npx tsx -e "import { MIN_ENGINE } from './src/emit/bedrock/constants.ts'; console.log(MIN_ENGINE.join('.'))")"
             echo "Requires Minecraft Bedrock ${min} or newer. Creature catalogue: https://${GITHUB_REPOSITORY_OWNER}.github.io/${GITHUB_REPOSITORY#*/}/"

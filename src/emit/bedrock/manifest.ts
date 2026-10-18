@@ -14,8 +14,8 @@ export function bpManifest() {
   return {
     format_version: 2,
     header: {
-      name: `${PACK_NAME} BP v${version.join('.')}`,
-      description: `Dinosaurs, prehistoric creatures, ancient plants and park gear. v${version.join('.')}`,
+      name: `${PACK_NAME} v${version.join('.')} (Behavior)`,
+      description: 'pack.description',
       uuid: uuids.bp.header,
       version,
       min_engine_version: MIN_ENGINE,
@@ -38,8 +38,8 @@ export function rpManifest() {
   return {
     format_version: 2,
     header: {
-      name: `${PACK_NAME} RP v${version.join('.')}`,
-      description: `Models, textures and sounds for ${PACK_NAME}. v${version.join('.')}`,
+      name: `${PACK_NAME} v${version.join('.')} (Resources)`,
+      description: 'pack.description',
       uuid: uuids.rp.header,
       version,
       min_engine_version: MIN_ENGINE,
@@ -47,4 +47,12 @@ export function rpManifest() {
     modules: [{ type: 'resources', uuid: uuids.rp.resources, version }],
     metadata: { authors: ['minecraft-dinosaurs contributors'], license: 'MIT', url: 'https://github.com/ulfendk/minecraft-dinosaurs' },
   };
+}
+
+/** Localised pack description shown under the pack name in Minecraft (lang key pack.description). */
+export function packDescription(locale: 'en_US' | 'da_DK') {
+  const v = packVersion().join('.');
+  return locale === 'da_DK'
+    ? `Forhistoriske Dinosaurer: 62 dinosaurer og andre forhistoriske dyr, oldtidsplanter, elektriske hegn og safarikøretøjer (v${v})`
+    : `Prehistoric Dinosaurs: 62 dinosaurs and other prehistoric creatures, ancient plants, electric fences and safari vehicles (v${v})`;
 }

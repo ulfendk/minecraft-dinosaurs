@@ -75,7 +75,7 @@ const dinoCount = CREATURES.filter((c) => ['theropod', 'bird', 'sauropod', 'orni
 const others = count - dinoCount;
 const latest = `https://github.com/${REPO}/releases/latest`;
 const direct = VERSION ? `https://github.com/${REPO}/releases/download/v${VERSION}/prehistoric-dinosaurs-${VERSION}.mcaddon` : latest;
-const javaJar = VERSION ? `https://github.com/${REPO}/releases/download/v${VERSION}/prehistoric-dinosaurs-fabric-${VERSION}.jar` : latest;
+const javaJar = VERSION ? `https://github.com/${REPO}/releases/download/v${VERSION}/prehistoric-dinosaurs-fabric-${VERSION}%2B26.3.jar` : latest;
 const minVersion = MIN_ENGINE.join('.');
 const file = `prehistoric-dinosaurs-${VERSION || '&lt;version&gt;'}.mcaddon`;
 
@@ -107,7 +107,7 @@ const T = {
       'Create or edit a world. Under <b>Behavior Packs</b>, activate <i>Prehistoric Dinosaurs BP</i> (the resource pack is added automatically).',
       'Optional: turn on the <b>Custom Biomes</b> experiment to get the Prehistoric Jungle biome. Everything else works without experiments.',
       'Your first time in the world, you get a <b>Dino Field Guide</b>.',
-      `<b>Java Edition:</b> install <a href="https://fabricmc.net/use/">Fabric Loader</a> for Minecraft 26.3, plus <a href="https://modrinth.com/mod/fabric-api">Fabric API</a> and <a href="https://modrinth.com/mod/geckolib">GeckoLib</a>. Then put <a href="${javaJar}"><code>prehistoric-dinosaurs-fabric-${VERSION || '&lt;version&gt;'}.jar</code></a> in your <code>mods</code> folder. The Prehistoric Jungle biome is Bedrock-only; on Java, the plants and creatures appear in vanilla biomes.`,
+      `<b>Java Edition:</b> install <a href="https://fabricmc.net/use/">Fabric Loader</a> for Minecraft 26.3, plus <a href="https://modrinth.com/mod/fabric-api">Fabric API</a> and <a href="https://modrinth.com/mod/geckolib">GeckoLib</a>. Then put <a href="${javaJar}"><code>prehistoric-dinosaurs-fabric-${VERSION || '&lt;version&gt;'}+26.3.jar</code></a> in your <code>mods</code> folder. The Prehistoric Jungle biome is Bedrock-only; on Java, the plants and creatures appear in vanilla biomes.`,
     ],
     tameEgg: 'Tame from egg',
     tameable: 'Tameable',
@@ -156,7 +156,7 @@ const T = {
       'Opret eller rediger en verden. Under <b>Adfærdspakker</b> (Behavior Packs) aktiverer du <i>Prehistoric Dinosaurs BP</i> (ressourcepakken tilføjes automatisk).',
       'Valgfrit: slå eksperimentet <b>Custom Biomes</b> til for at få det forhistoriske junglebiom. Alt andet virker uden eksperimenter.',
       'Første gang du er i verdenen, får du en <b>Dino Field Guide</b> (felthåndbog).',
-      `<b>Java Edition:</b> installér <a href="https://fabricmc.net/use/">Fabric Loader</a> til Minecraft 26.3 samt <a href="https://modrinth.com/mod/fabric-api">Fabric API</a> og <a href="https://modrinth.com/mod/geckolib">GeckoLib</a>. Læg derefter <a href="${javaJar}"><code>prehistoric-dinosaurs-fabric-${VERSION || '&lt;version&gt;'}.jar</code></a> i din <code>mods</code>-mappe. Det forhistoriske junglebiom findes kun på Bedrock; på Java dukker planterne og dyrene op i de almindelige biomer.`,
+      `<b>Java Edition:</b> installér <a href="https://fabricmc.net/use/">Fabric Loader</a> til Minecraft 26.3 samt <a href="https://modrinth.com/mod/fabric-api">Fabric API</a> og <a href="https://modrinth.com/mod/geckolib">GeckoLib</a>. Læg derefter <a href="${javaJar}"><code>prehistoric-dinosaurs-fabric-${VERSION || '&lt;version&gt;'}+26.3.jar</code></a> i din <code>mods</code>-mappe. Det forhistoriske junglebiom findes kun på Bedrock; på Java dukker planterne og dyrene op i de almindelige biomer.`,
     ],
     tameEgg: 'Tæmmes fra æg',
     tameable: 'Kan tæmmes',
