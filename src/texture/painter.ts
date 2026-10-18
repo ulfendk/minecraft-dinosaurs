@@ -152,10 +152,18 @@ function skinColour(cube: Cube, f: FaceLayout, p: Vec3, ctx: Ctx): RGB {
     col = mix(col, c.pattern, m * strength);
   }
   if (pal.spine && f.face === 'up' && Math.abs(p[0]) < Math.max(1, cube.size[0] * 0.18)) col = darken(col, 0.18);
-  // scale texture: subtle checker of darker scales
-  const sc = (Math.floor(p[0]) + Math.floor(p[1]) * 2 + Math.floor(p[2])) & 3;
-  if (sc === 0) col = shade(col, 0.95);
-  return shade(col, grain(p, seed));
+  // scales: small cellular tiles with darker seams, finer on limbs
+  const limb = (cube.tags ?? []).includes('limb');
+  const cs = limb ? 1.1 : 1.6;
+  const cd = cellular(p[0] / cs + 11, p[1] / cs, p[2] / cs, seed + 9);
+  if (cd > 0.62) col = shade(col, 0.9);
+  else if (cd < 0.22) col = lighten(col, 0.04);
+  // wrinkles across limbs and the neck/tail undersides
+  if (limb && f.face !== 'up' && f.face !== 'down' && ((Math.floor(p[1] * 1.5) + Math.floor(hash3(Math.floor(p[0]), 0, Math.floor(p[2]), seed) * 3)) % 4 === 0)) col = shade(col, 0.93);
+  // ambient occlusion: lower part of each side face is a little darker
+  if (f.face !== 'up' && f.face !== 'down') col = shade(col, 0.86 + 0.14 * smoothstep(0, 0.45, frac(cube, p, 1)));
+  if (f.face === 'down') col = shade(col, 0.88);
+  return shade(col, grain(p, seed, 0.05));
 }
 
 function texel(cube: Cube, f: FaceLayout, i: number, j: number, w: number, h: number, p: Vec3, edge: boolean, ctx: Ctx): RGB {
@@ -285,7 +293,7 @@ function texel(cube: Cube, f: FaceLayout, i: number, j: number, w: number, h: nu
   if (SKINLIKE.has(cube.mat)) {
     col = applyJaws(col, cube, f, i, j, w, h, p, ctx, tags);
     col = applyDecals(col, cube, p, ctx);
-    if (edge && w > 2 && h > 2) col = shade(col, 0.9);
+    if (edge && w > 2 && h > 2) col = shade(col, 0.95);
   }
   return col;
 }
