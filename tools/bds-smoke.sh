@@ -22,7 +22,7 @@ for kv in "content-log-file-enabled=true" "content-log-console-output-enabled=tr
   k="${kv%%=*}"; grep -v "^$k=" "$DATA/server.properties" > "$DATA/sp.tmp" || true; mv "$DATA/sp.tmp" "$DATA/server.properties"; echo "$kv" >> "$DATA/server.properties"
 done
 docker rm -f dino-bds >/dev/null 2>&1 || true
-docker run -dit --name dino-bds -e EULA=TRUE -e VERSION="${BDS_VERSION:-LATEST}" -e LEVEL_NAME="$LEVEL" -v "$DATA:/data" itzg/minecraft-bedrock-server >/dev/null
+docker run -dit --cap-add SYS_PTRACE --name dino-bds -e EULA=TRUE -e VERSION="${BDS_VERSION:-LATEST}" -e LEVEL_NAME="$LEVEL" -v "$DATA:/data" itzg/minecraft-bedrock-server >/dev/null
 echo "waiting for server start…"
 for i in $(seq 1 180); do
   if docker logs dino-bds 2>&1 | grep -q "Server started"; then break; fi
@@ -41,7 +41,8 @@ feats.forEach((f, i) => cmds.push(`place feature ${f} ${(i % 4) * 10} 100 ${Math
 fs.writeFileSync(".cache/bds/commands.txt", cmds.join("\n") + "\n");
 '
 docker exec dino-bds send-command "tickingarea add circle 16 0 16 3 smoke true" >/dev/null 2>&1 || true
-echo "== console check:"; docker exec dino-bds send-command "list" 2>&1 | tail -5 || true; docker exec dino-bds sh -c 'id; ls -la /data | head -5' 2>&1 | tail -6
+# send-command must be able to find the server process (needs SYS_PTRACE on hardened hosts)
+docker exec dino-bds send-command "list" 2>&1 | grep -i "error" && { echo "console commands are not available"; exit 1; }
 # wait until the ticking area is loaded (a probe summon succeeds)
 for i in $(seq 1 60); do
   sleep 3
