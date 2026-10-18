@@ -22,7 +22,7 @@ for kv in "content-log-file-enabled=true" "content-log-console-output-enabled=tr
   k="${kv%%=*}"; grep -v "^$k=" "$DATA/server.properties" > "$DATA/sp.tmp" || true; mv "$DATA/sp.tmp" "$DATA/server.properties"; echo "$kv" >> "$DATA/server.properties"
 done
 docker rm -f dino-bds >/dev/null 2>&1 || true
-docker run -d --name dino-bds -e EULA=TRUE -e VERSION="${BDS_VERSION:-LATEST}" -e LEVEL_NAME="$LEVEL" -v "$DATA:/data" itzg/minecraft-bedrock-server >/dev/null
+docker run -dit --name dino-bds -e EULA=TRUE -e VERSION="${BDS_VERSION:-LATEST}" -e LEVEL_NAME="$LEVEL" -v "$DATA:/data" itzg/minecraft-bedrock-server >/dev/null
 echo "waiting for server start…"
 for i in $(seq 1 180); do
   if docker logs dino-bds 2>&1 | grep -q "Server started"; then break; fi
@@ -68,7 +68,9 @@ cat "$DATA/server-output.log" "$DATA"/logs/*ContentLog* 2>/dev/null | grep -E "(
 echo "== content log problems: $(wc -l < "$DATA/problems.log" | tr -d ' ')"
 head -100 "$DATA/problems.log"
 summoned=$(grep -c "Object successfully summoned" "$DATA/server-output.log" || true)
-echo "== summoned: $summoned entities"
+expected=$(ls build/dinosaurs_BP/entities | wc -l | tr -d ' ')
+echo "== summoned: $summoned entities (expected at least $expected)"
+[ "$summoned" -ge "$expected" ] || { echo "commands did not run or entities failed to summon"; exit 1; }
 fence_ok=$(grep -c "Successfully found the block at 2[01],160,20" "$DATA/server-output.log" || true)
 echo "== fence link checks passed: $fence_ok/3"
 [ "$fence_ok" = "3" ] || { echo "fence linking broken"; exit 1; }
