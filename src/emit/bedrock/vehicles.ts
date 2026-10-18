@@ -10,15 +10,22 @@ export function vehicleAssets(v: VehicleDef) {
   return { model, texture };
 }
 
+const r2 = (n: number) => Math.round(n * 100) / 100;
+
+/** Seat positions in entity space (blocks, +z forward): riders sit ~0.15 below the seat surface, like vanilla mounts. */
+export function vehicleSeats(v: VehicleDef): [number, number, number][] {
+  return v.seatsPx.map(([x, y, z]) => [r2((-x / 16) * v.scale), r2((y / 16) * v.scale - 0.15), r2((-z / 16) * v.scale)]);
+}
+
 export function vehicleBehavior(v: VehicleDef) {
-  const seats = v.seatPos.map((p) => ({ min_rider_count: 0, max_rider_count: v.seats, position: p, third_person_camera_radius: 6 }));
+  const seats = vehicleSeats(v).map((p) => ({ min_rider_count: 0, max_rider_count: v.seats, position: p, third_person_camera_radius: Math.round(6 * v.scale) }));
   return {
     format_version: FORMAT.entity,
     'minecraft:entity': {
       description: { identifier: `${NS}:${v.id}`, is_spawnable: false, is_summonable: true },
       components: {
         'minecraft:type_family': { family: ['dino_vehicle', 'inanimate'] },
-        'minecraft:collision_box': v.hitbox,
+        'minecraft:collision_box': { width: r2(v.hitbox.width * v.scale), height: r2(v.hitbox.height * v.scale) },
         'minecraft:health': { value: v.health, max: v.health },
         'minecraft:physics': {},
         'minecraft:pushable_by_block': {},

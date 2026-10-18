@@ -51,10 +51,12 @@ export interface Pose {
   [bone: string]: { rotation?: Vec3; position?: Vec3; hidden?: boolean; scale?: number };
 }
 
-interface Tri {
+export interface Tri {
   p: Vec3[];
   uv: [number, number][];
   shade: number;
+  /** optional own texture (uv in its pixels), e.g. for overlay props */
+  tex?: PNG;
 }
 
 /** Collects textured triangles in display space (x mirrored like Blockbench/in-game). */
@@ -185,17 +187,19 @@ export function renderView(tris: Tri[], tex: PNG, view: View, size: number, geoT
           if (z >= zbuf[idx]) continue;
           const u = w0 * t.uv[0][0] + w1 * t.uv[1][0] + w2 * t.uv[2][0];
           const v = w0 * t.uv[0][1] + w1 * t.uv[1][1] + w2 * t.uv[2][1];
-          const tx = Math.min(tw - 1, Math.max(0, Math.floor(u * su - 1e-4)));
-          const ty = Math.min(th - 1, Math.max(0, Math.floor(v * sv - 1e-4)));
-          const ti4 = (ty * tw + tx) * 4;
-          const alpha = tex.data[ti4 + 3];
+          const T = t.tex ?? tex;
+          const ttw = T.width, tth = T.height;
+          const tx = Math.min(ttw - 1, Math.max(0, Math.floor(u * (t.tex ? 1 : su) - 1e-4)));
+          const ty = Math.min(tth - 1, Math.max(0, Math.floor(v * (t.tex ? 1 : sv) - 1e-4)));
+          const ti4 = (ty * ttw + tx) * 4;
+          const alpha = T.data[ti4 + 3];
           if (alpha < 8) continue;
           const isTrans = alpha < 250;
           if (isTrans !== translucent) continue;
           const k = alpha / 255;
           if (!translucent) zbuf[idx] = z;
           for (let ch = 0; ch < 3; ch++) {
-            const src = Math.min(255, tex.data[ti4 + ch] * t.shade);
+            const src = Math.min(255, T.data[ti4 + ch] * t.shade);
             out.data[idx * 4 + ch] = translucent ? out.data[idx * 4 + ch] * (1 - k) + src * k : src;
           }
         }

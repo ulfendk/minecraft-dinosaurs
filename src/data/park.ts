@@ -76,9 +76,10 @@ export interface VehicleDef {
   health: number;
   scale: number;
   palette: Palette;
+  /** collision box in blocks at scale 1 (multiplied by scale) */
   hitbox: { width: number; height: number };
-  /** seat positions in blocks (entity space: +z forward) */
-  seatPos: [number, number, number][];
+  /** seat centres in model pixels: [x, seat surface y, z] (model faces -z) */
+  seatsPx: [number, number, number][];
   build(): ModelBuilder;
   wheels: string[];
   spinBone?: string;
@@ -100,9 +101,9 @@ export const VEHICLES: VehicleDef[] = [
     seats: 4,
     speed: 0.32,
     health: 60,
-    scale: 1,
-    hitbox: { width: 2.4, height: 2.0 },
-    seatPos: [[0.45, 0.75, 0.2], [-0.45, 0.75, 0.2], [0.45, 0.85, -0.85], [-0.45, 0.85, -0.85]],
+    scale: 1.45,
+    hitbox: { width: 1.7, height: 1.4 },
+    seatsPx: [[5.5, 12, 1.5], [-5.5, 12, 1.5], [5.5, 12, 15.5], [-5.5, 12, 15.5]],
     wheels: ['wheel_fl', 'wheel_fr', 'wheel_bl', 'wheel_br'],
     palette: { back: '#3f6b2f', side: '#3f6b2f', belly: '#2b2b2b', accent: '#3f6b2f', accent2: '#e3b43a' },
     build() {
@@ -134,12 +135,14 @@ export const VEHICLES: VehicleDef[] = [
       c.box([-12, 33, -8], [24, 1, 14], 'canvas'); // sun canopy
       c.box([-10, 33.6, -2], [20, 1, 2], 'lamp'); // light bar
       // seats
+      // seats sit low in the tub, like a real open 4x4
       for (const [x, z] of [[-5.5, -4], [5.5, -4], [-5.5, 12], [5.5, 12]]) {
-        c.box([x - 4, 15, z - 2], [8, 2, 7], 'seat');
-        c.box([x - 4, 17, z + 4], [8, 7, 1], 'seat');
+        c.box([x - 4, 10, z - 2], [8, 2, 7], 'seat');
+        c.box([x - 4, 12, z + 4], [8, 9, 1], 'seat');
       }
-      // steering wheel
-      c.box([-8, 20, -6], [5, 5, 1], 'tyre', { rotation: [-30, 0, 0] });
+      // steering wheel + column
+      c.box([-8, 17, -6], [5, 5, 1], 'tyre', { rotation: [-30, 0, 0] });
+      c.box([-6, 13, -7], [1, 5, 1], 'metal', { rotation: [-30, 0, 0] });
       // rear spare tyre
       c.box([-5, 12, 23], [10, 10, 3], 'tyre');
       // fenders
@@ -161,9 +164,9 @@ export const VEHICLES: VehicleDef[] = [
     seats: 4,
     speed: 0.3,
     health: 80,
-    scale: 1,
-    hitbox: { width: 2.4, height: 2.2 },
-    seatPos: [[0.45, 0.7, 0.25], [-0.45, 0.7, 0.25], [0.45, 0.7, -0.75], [-0.45, 0.7, -0.75]],
+    scale: 1.45,
+    hitbox: { width: 1.7, height: 1.6 },
+    seatsPx: [[5.5, 12, 0.5], [-5.5, 12, 0.5], [5.5, 12, 14.5], [-5.5, 12, 14.5]],
     wheels: ['wheel_fl', 'wheel_fr', 'wheel_bl', 'wheel_br'],
     palette: { back: '#ecebe4', side: '#ecebe4', belly: '#2b2b2b', accent: '#ecebe4', accent2: '#c0392b' },
     build() {
@@ -179,25 +182,26 @@ export const VEHICLES: VehicleDef[] = [
       c.box([-11, 13, -23.5], [4, 2, 1], 'lamp');
       c.box([7, 13, -23.5], [4, 2, 1], 'lamp');
       // cabin: pillars + glass + white roof with glass bubble
-      c.box([-12, 19, -11], [24, 11, 1], 'glass');
+      c.box([-12, 19, -11], [24, 14, 1], 'glass');
       // lower door panels, window pillars and side glass
       c.box([-13, 17, -10], [1, 4, 33], 'paint');
       c.box([12, 17, -10], [1, 4, 33], 'paint');
       for (const z of [-10, 5, 20]) {
-        c.box([-13, 21, z], [1, 9, 2], 'paint');
-        c.box([12, 21, z], [1, 9, 2], 'paint');
+        c.box([-13, 21, z], [1, 12, 2], 'paint');
+        c.box([12, 21, z], [1, 12, 2], 'paint');
       }
-      c.box([-12.6, 21, -8], [0, 9, 28], 'glass');
-      c.box([12.6, 21, -8], [0, 9, 28], 'glass');
-      c.box([-12, 17, 22], [24, 14, 1], 'paint');
-      c.box([-10, 23, 22.2], [20, 6, 1], 'glass');
-      c.box([-13, 30, -11], [26, 2, 34], 'paint');
-      c.box([-8, 32, -6], [16, 3, 22], 'glass'); // bubble roof
-      c.box([-13.5, 26, -11], [27, 1, 34], 'paint2', { inflate: 0.05 });
+      c.box([-12.6, 21, -8], [0, 12, 28], 'glass');
+      c.box([12.6, 21, -8], [0, 12, 28], 'glass');
+      c.box([-12, 17, 22], [24, 16, 1], 'paint');
+      c.box([-10, 24, 22.2], [20, 7, 1], 'glass');
+      c.box([-13, 33, -11], [26, 2, 34], 'paint');
+      c.box([-8, 35, -6], [16, 3, 22], 'glass'); // bubble roof
+      c.box([-13.5, 29, -11], [27, 1, 34], 'paint2', { inflate: 0.05 });
       for (const [x, z] of [[-5.5, -5], [5.5, -5], [-5.5, 11], [5.5, 11]]) {
-        c.box([x - 4, 15, z - 2], [8, 2, 7], 'seat');
-        c.box([x - 4, 17, z + 4], [8, 8, 1], 'seat');
+        c.box([x - 4, 10, z - 2], [8, 2, 7], 'seat');
+        c.box([x - 4, 12, z + 4], [8, 10, 1], 'seat');
       }
+      c.box([-8, 18, -7], [5, 5, 1], 'tyre', { rotation: [-30, 0, 0] }); // steering wheel
       wheel(mb, 'wheel_fl', 11.5, -14, 5.5, 4);
       wheel(mb, 'wheel_fr', -11.5, -14, 5.5, 4);
       wheel(mb, 'wheel_bl', 11.5, 14, 5.5, 4);
@@ -212,9 +216,9 @@ export const VEHICLES: VehicleDef[] = [
     seats: 2,
     speed: 0.28,
     health: 40,
-    scale: 1,
-    hitbox: { width: 1.9, height: 1.9 },
-    seatPos: [[0.3, 0.35, 0], [-0.3, 0.35, 0]],
+    scale: 1.4,
+    hitbox: { width: 1.8, height: 1.9 },
+    seatsPx: [[4.5, 8, 1.5], [-4.5, 8, 1.5]],
     wheels: [],
     spinBone: 'shell',
     palette: { back: '#c8ccd0', side: '#c8ccd0', belly: '#2b2b2b', accent: '#c8ccd0', accent2: '#2f6f8f' },
