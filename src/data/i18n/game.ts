@@ -1,5 +1,6 @@
 // In-game text (lang files) for English and Danish: script UI strings and Danish names.
 import { DA_INFO, DA_PLANT_INFO, DA_TERMS } from './da.js';
+import { BIOME_LABELS, HABITATS } from '../habitats.js';
 
 export type Locale = 'en_US' | 'da_DK';
 
@@ -15,6 +16,8 @@ export const UI: Record<string, Record<Locale, string>> = {
   'guide.close': { en_US: 'Close', da_DK: 'Luk' },
   'guide.saplings': { en_US: 'Saplings grow on their own or with bone meal.', da_DK: 'Spirer vokser af sig selv eller med benmel.' },
   'page.temperament': { en_US: 'Temperament:', da_DK: 'Temperament:' },
+  'page.lives_in': { en_US: 'Lives in:', da_DK: 'Lever i:' },
+  'page.habitat': { en_US: 'Habitat:', da_DK: 'Levested:' },
   'page.taming': { en_US: 'Taming:', da_DK: 'Tæmning:' },
   'page.riding': { en_US: 'Riding:', da_DK: 'Ridning:' },
   'tame.egg': { en_US: 'Only hatchlings: find an egg and place it.', da_DK: 'Kun nyklækkede unger: find et æg og placér det.' },
@@ -155,6 +158,8 @@ export function guideLang(locale: Locale, creatures: { id: string; info: string 
   const lines: string[] = [];
   for (const [k, v] of Object.entries(UI)) lines.push(`dino.ui.${k}=${v[locale]}`);
   for (const [k, v] of Object.entries(GROUP_NAMES)) lines.push(`dino.group.${k}=${v[locale]}`);
+  for (const h of HABITATS) lines.push(`dino.habitat.${h.id}=${da ? h.da : h.en}`);
+  for (const [k, v] of Object.entries(BIOME_LABELS)) lines.push(`dino.biome.${k}=${da ? v.da : v.en}`);
   for (const c of creatures) lines.push(`dino.info.${c.id}=${da ? (DA_INFO[c.id] ?? c.info) : c.info}`);
   for (const p of plants) {
     lines.push(`dino.plant.${p.id}.name=${da ? (DA_GAME_NAMES[p.id] ?? p.name) : p.name}`);

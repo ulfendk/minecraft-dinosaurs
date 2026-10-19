@@ -17,6 +17,21 @@ A Minecraft mod for **Bedrock** and **Java** (Fabric) with **50 dinosaurs**, **1
 | **Park gear** | Electric fence + fence generator, safari truck, park tour car, gyrosphere (full-size: seats fit a player), electric prod, tranquilizer rifle + darts |
 | **Other** | Fossil blocks, amber ore (with a rare mosquito in amber), dino meat, hide, feathers, scutes, megalodon tooth, creature eggs, and an in-game **Dino Field Guide** |
 
+### Creatures by habitat
+
+Every creature belongs to one habitat. Its field guide entry and website card also list all the biomes it lives in. On Bedrock, with the experiment enabled, they all also live in the Prehistoric Jungle.
+
+| Habitat | Creatures |
+|---|---|
+| **Forests & taiga** | Deinonychus, Utahraptor, Microraptor, Troodon, Therizinosaurus, Ceratosaurus, Herrerasaurus, Albertosaurus, Plateosaurus, Iguanodon, Pachyrhinosaurus, Psittacosaurus, Euoplocephalus, Nodosaurus |
+| **Jungles** | Compsognathus, Archaeopteryx, Dilophosaurus, Mamenchisaurus |
+| **Plains** | Tyrannosaurus rex, Gallimimus, Allosaurus, Giganotosaurus, Gorgosaurus, Brachiosaurus, Diplodocus, Apatosaurus, Brontosaurus, Dreadnoughtus, Edmontosaurus, Maiasaura, Pachycephalosaurus, Triceratops, Styracosaurus, Stegosaurus, Ankylosaurus |
+| **Savannas** | Carnotaurus, Majungasaurus, Argentinosaurus, Amargasaurus, Kentrosaurus |
+| **Deserts & badlands** | Velociraptor, Coelophysis, Oviraptor, Carcharodontosaurus, Protoceratops, Dimetrodon |
+| **Swamps & rivers** | Spinosaurus, Baryonyx, Suchomimus, Parasaurolophus, Corythosaurus, Sarcosuchus, Titanoboa |
+| **Oceans** | Megalodon, Dunkleosteus, Mosasaurus, Plesiosaurus, Ichthyosaurus |
+| **Skies & cliffs** | Pteranodon, Pterodactylus, Quetzalcoatlus, Dimorphodon |
+
 ### Taming and riding
 
 - **Feed to tame:** hold a creature's favourite food: meat for carnivores, ferns, ginkgo nuts or cycad cones for herbivores, and fish for sea creatures and pterosaurs.

@@ -32,6 +32,10 @@ public final class CreatureSpec {
 	public Ride ride;
 	public Spawn spawn;
 	public boolean lays;
+	/** habitat group (forests, jungles, plains, savannas, deserts, swamps, oceans, skies) */
+	public String habitatGroup;
+	/** biomes it lives in (ids from the shared data, e.g. forest, river) */
+	public List<String> livesIn;
 	public Sounds sounds;
 
 	public static final class Ride {

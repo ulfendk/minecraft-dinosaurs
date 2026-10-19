@@ -24,6 +24,10 @@ public class FieldGuideItem extends Item {
 			var s = d.spec;
 			player.sendSystemMessage(Component.translatable("entity.dinosaurs." + s.id).withStyle(ChatFormatting.BOLD, ChatFormatting.GOLD));
 			player.sendSystemMessage(Component.translatable("dinosaurs.info." + s.id));
+			player.sendSystemMessage(Component.translatable("dinosaurs.ui.page.habitat").withStyle(ChatFormatting.GOLD).append(" ").append(Component.translatable("dinosaurs.habitat." + s.habitatGroup).withStyle(ChatFormatting.WHITE)));
+			var where = Component.translatable("dinosaurs.ui.page.lives_in").withStyle(ChatFormatting.GOLD);
+			for (int i = 0; i < s.livesIn.size(); i++) where.append(i == 0 ? " " : ", ").append(Component.translatable("dinosaurs.biome." + s.livesIn.get(i)).withStyle(ChatFormatting.WHITE));
+			player.sendSystemMessage(where);
 			String tame = "egg".equals(s.tame) ? "tame.egg" : "feed".equals(s.tame) ? "tame.feed" : "tame.no";
 			String ride = s.ride == null ? "ride.no" : "ride." + s.ride.mode;
 			player.sendSystemMessage(Component.translatable("dinosaurs.ui.page.taming").withStyle(ChatFormatting.GOLD).append(" ").append(Component.translatable("dinosaurs.ui." + tame).withStyle(ChatFormatting.WHITE)));

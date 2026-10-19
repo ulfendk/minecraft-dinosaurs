@@ -13,6 +13,7 @@ import { lootTable } from '../bedrock/creatureFiles.js';
 import { seatPositions } from '../bedrock/entity.js';
 import { GEAR_ICONS } from '../bedrock/gear.js';
 import { mergedAnimation } from './anim.js';
+import { BIOME_LABELS, HABITATS, habitatOf, livesIn } from '../../data/habitats.js';
 import { eggModel, eggTexture } from '../bedrock/eggs.js';
 
 export const JAVA_RES = path.resolve('java/src/generated/resources');
@@ -74,6 +75,8 @@ export function creatureSpec(x: Assembled) {
     ride: d.ride ? { mode: d.ride.mode, seats: d.ride.seats, speed: d.ride.speed ?? null, jump: d.ride.jump ?? 0.6, seatPositions: seatPositions(x) } : null,
     spawn: d.spawn ? { biomes: [...new Set(d.spawn.biomes.flatMap((b) => BIOMES[b]))], weight: d.spawn.weight, min: d.spawn.herd[0], max: d.spawn.herd[1] } : null,
     lays: d.habitat !== 'water',
+    habitatGroup: habitatOf(d),
+    livesIn: livesIn(d).filter((b) => b !== 'prehistoric'),
     sounds: { ambient: javaSound(d.sounds.ambient), hurt: javaSound(d.sounds.hurt), death: javaSound(d.sounds.death), step: javaSound(d.sounds.step), pitch: d.sounds.pitch },
   };
 }
@@ -156,6 +159,14 @@ export async function buildJavaResources(opts: { quiet?: boolean } = {}) {
   for (const [k, v] of Object.entries(UI)) {
     en[`${MOD}.ui.${k}`] = v.en_US.replace(/%s/g, '%s');
     da[`${MOD}.ui.${k}`] = v.da_DK;
+  }
+  for (const h of HABITATS) {
+    en[`${MOD}.habitat.${h.id}`] = h.en;
+    da[`${MOD}.habitat.${h.id}`] = h.da;
+  }
+  for (const [k, v] of Object.entries(BIOME_LABELS)) {
+    en[`${MOD}.biome.${k}`] = v.en;
+    da[`${MOD}.biome.${k}`] = v.da;
   }
   en[`itemGroup.${MOD}`] = 'Prehistoric Dinosaurs';
   da[`itemGroup.${MOD}`] = 'Forhistoriske Dinosaurer';

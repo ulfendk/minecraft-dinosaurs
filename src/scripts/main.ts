@@ -402,6 +402,8 @@ function creaturePage(player: Player, id: string, back: () => void) {
     txt('§l'), name, txt('§r'), NL,
     txt('§7'), t(`dino.term.${c.period}`), txt(` · ${c.lengthM} m · `), t(`dino.term.${c.diet}`), txt('§r'), NL, NL,
     t(`dino.info.${c.id}`), NL, NL,
+    txt('§6'), tr('page.habitat'), txt('§r '), t(`dino.habitat.${c.habitat}`), NL,
+    txt('§6'), tr('page.lives_in'), txt('§r '), ...c.livesIn.flatMap((b, i) => (i ? [txt(', '), t(`dino.biome.${b}`)] : [t(`dino.biome.${b}`)])), NL,
     txt('§6'), tr('page.temperament'), txt('§r '), t(`dino.term.${c.temperament}`), NL,
     txt('§6'), tr('page.taming'), txt('§r '), tr(`tame.${c.tame}`), NL,
     txt('§6'), tr('page.riding'), txt('§r '), ride,
@@ -418,8 +420,8 @@ function creaturePage(player: Player, id: string, back: () => void) {
 }
 
 function groupPage(player: Player, group: string) {
-  const list = DATA.creatures.filter((c) => c.group === group).sort((a, b) => PERIOD_ORDER.indexOf(a.period) - PERIOD_ORDER.indexOf(b.period) || a.name.localeCompare(b.name));
-  const form = new ActionFormData().title(t(`dino.group.${group}`)).body(tr('guide.species', [String(list.length)]));
+  const list = DATA.creatures.filter((c) => c.habitat === group).sort((a, b) => PERIOD_ORDER.indexOf(a.period) - PERIOD_ORDER.indexOf(b.period) || a.name.localeCompare(b.name));
+  const form = new ActionFormData().title(t(`dino.habitat.${group}`)).body(tr('guide.species', [String(list.length)]));
   for (const c of list) form.button(lines(t(`entity.${NS}:${c.id}.name`), txt('\n§8'), t(`dino.term.${c.period}`)));
   form.show(player).then((r) => {
     if (r.canceled || r.selection === undefined) return showGuide(player);
@@ -434,9 +436,9 @@ function textPage(player: Player, title: RawMessage, body: RawMessage) {
 }
 
 function showGuide(player: Player) {
-  const groups = [...new Set(DATA.creatures.map((c) => c.group))];
+  const groups = DATA.habitats.filter((h) => DATA.creatures.some((c) => c.habitat === h));
   const form = new ActionFormData().title(tr('guide.title', [DATA.version])).body(lines(txt('§7'), tr('guide.body', [String(DATA.creatures.length)])));
-  for (const g of groups) form.button(t(`dino.group.${g}`));
+  for (const g of groups) form.button(lines(t(`dino.habitat.${g}`), txt(`\n§8${DATA.creatures.filter((c) => c.habitat === g).length}`)));
   form.button(tr('guide.plants'));
   form.button(tr('guide.taming'));
   form.button(tr('guide.park'));

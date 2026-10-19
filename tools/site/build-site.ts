@@ -10,6 +10,7 @@ import { CREATURES } from '../../src/data/registry.js';
 import { PLANTS, TREES } from '../../src/data/plants.js';
 import { VEHICLES } from '../../src/data/park.js';
 import { DA_INFO, DA_NAMES, DA_PLANT_INFO, DA_TERMS } from '../../src/data/i18n/da.js';
+import { BIOME_LABELS, HABITATS, habitatOf, livesIn } from '../../src/data/habitats.js';
 import { MIN_ENGINE } from '../../src/emit/bedrock/constants.js';
 import { buildItems } from '../../src/emit/bedrock/items.js';
 import { GEAR_ICONS } from '../../src/emit/bedrock/gear.js';
@@ -56,20 +57,6 @@ for (const [id, f] of Object.entries(GEAR_ICONS)) save(`gear_${id}.png`, upscale
 // ---------------------------------------------------------------- text
 
 type Lang = 'en' | 'da';
-const GROUPS: Record<string, string> = {
-  theropod: 'Theropods',
-  bird: 'Theropods',
-  sauropod: 'Sauropods',
-  ornithopod: 'Ornithopods',
-  ceratopsian: 'Horned dinosaurs',
-  thyreophoran: 'Armoured dinosaurs',
-  pterosaur: 'Pterosaurs',
-  marine_reptile: 'Marine reptiles',
-  fish: 'Prehistoric fish',
-  crocodilian: 'Other prehistoric animals',
-  snake: 'Other prehistoric animals',
-  synapsid: 'Other prehistoric animals',
-};
 const count = CREATURES.length;
 const dinoCount = CREATURES.filter((c) => ['theropod', 'bird', 'sauropod', 'ornithopod', 'ceratopsian', 'thyreophoran'].includes(c.group)).length;
 const others = count - dinoCount;
@@ -110,6 +97,10 @@ const T = {
       `<b>Java Edition:</b> install <a href="https://fabricmc.net/use/">Fabric Loader</a> for Minecraft 26.3, plus <a href="https://modrinth.com/mod/fabric-api">Fabric API</a> and <a href="https://modrinth.com/mod/geckolib">GeckoLib</a>. Then put <a href="${javaJar}"><code>prehistoric-dinosaurs-fabric-${VERSION || '&lt;version&gt;'}+26.3.jar</code></a> in your <code>mods</code> folder. The Prehistoric Jungle biome is Bedrock-only; on Java, the plants and creatures appear in vanilla biomes.`,
     ],
     tameEgg: 'Tame from egg',
+    livesIn: 'Lives in:',
+    byHabitat: 'Creatures by habitat',
+    filterLabel: 'Filter creatures',
+    all: 'All',
     tameable: 'Tameable',
     rideable: 'Rideable',
     land: 'land',
@@ -159,6 +150,10 @@ const T = {
       `<b>Java Edition:</b> installér <a href="https://fabricmc.net/use/">Fabric Loader</a> til Minecraft 26.3 samt <a href="https://modrinth.com/mod/fabric-api">Fabric API</a> og <a href="https://modrinth.com/mod/geckolib">GeckoLib</a>. Læg derefter <a href="${javaJar}"><code>prehistoric-dinosaurs-fabric-${VERSION || '&lt;version&gt;'}+26.3.jar</code></a> i din <code>mods</code>-mappe. Det forhistoriske junglebiom findes kun på Bedrock; på Java dukker planterne og dyrene op i de almindelige biomer.`,
     ],
     tameEgg: 'Tæmmes fra æg',
+    livesIn: 'Lever i:',
+    byHabitat: 'Dyrene efter levested',
+    filterLabel: 'Filtrér dyr',
+    all: 'Alle',
     tameable: 'Kan tæmmes',
     rideable: 'Kan rides',
     land: 'land',
@@ -197,13 +192,15 @@ function page(lang: Lang) {
       ride ? `<span class="b ride">${ride}</span>` : '',
       `<span class="b ${def.temperament}">${term(lang, def.temperament)}</span>`,
     ].join('');
-    (cards[GROUPS[def.group] ?? 'Other prehistoric animals'] ??= []).push(
-      `<article class="card"><img loading="lazy" src="${img(`${def.id}.png`)}" alt="${esc(def.name)}" width="320" height="320"><div><h3>${esc(def.name)}</h3><p class="meta">${term(lang, def.period)} · ${num(lang, def.lengthM)} ${t.m} · ${term(lang, def.diet)}</p><p>${esc(info(lang, def.id, def.info))}</p><p class="badges">${badges}</p></div></article>`,
+    const where = livesIn(def).map((b) => BIOME_LABELS[b][lang]).join(' · ');
+    (cards[habitatOf(def)] ??= []).push(
+      `<article class="card"${def.ride ? ' data-ride="1"' : ''}><img loading="lazy" src="${img(`${def.id}.png`)}" alt="${esc(def.name)}" width="320" height="320"><div><h3>${esc(def.name)}</h3><p class="meta">${term(lang, def.period)} · ${num(lang, def.lengthM)} ${t.m} · ${term(lang, def.diet)}</p><p class="where">${t.livesIn} ${esc(where)}</p><p>${esc(info(lang, def.id, def.info))}</p><p class="badges">${badges}</p></div></article>`,
     );
   }
-  const sections = Object.entries(cards)
-    .map(([g, list]) => `<section class="group"><h2>${term(lang, g)} <small>${list.length}</small></h2><div class="grid">${list.join('')}</div></section>`)
+  const sections = HABITATS.filter((h) => cards[h.id])
+    .map((h) => `<section class="group" data-habitat="${h.id}"><h2>${esc(h[lang])} <small>${cards[h.id].length}</small></h2><div class="grid">${cards[h.id].join('')}</div></section>`)
     .join('\n');
+  const filters = `<div class="filters" role="group" aria-label="${t.filterLabel}"><button aria-pressed="true" data-filter="all">${t.all}</button>${HABITATS.filter((h) => cards[h.id]).map((h) => `<button aria-pressed="false" data-filter="${h.id}">${esc(h[lang])}</button>`).join('')}<button aria-pressed="false" data-filter="ride">${t.rideable}</button></div>`;
   const small = (image: string, title: string, text: string) => `<article class="mini"><img loading="lazy" src="${img(image)}" alt="" width="64" height="64"><div><h3>${esc(title)}</h3><p>${esc(text)}</p></div></article>`;
   const other = lang === 'en' ? { href: 'da/', label: 'Dansk', hreflang: 'da' } : { href: '../', label: 'English', hreflang: 'en' };
 
@@ -243,6 +240,9 @@ ol.steps{padding-left:20px}ol.steps li{margin:6px 0}code{background:var(--chip);
 .mini img{width:64px;height:64px;image-rendering:pixelated;flex:none}.mini h3{margin:0;font-size:1rem}.mini p{margin:2px 0 0;font-size:.9rem;color:var(--muted)}
 .vehicles{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}.vehicles .card img{background:radial-gradient(circle at 50% 60%,#e7e2d2,#d2ccb8)}
 footer{padding:28px 0 48px;color:var(--muted);font-size:.9rem}
+.where{margin:0 0 6px;font-size:.85rem;color:var(--accent)}
+.filters{display:flex;flex-wrap:wrap;gap:8px}.filters button{font:inherit;font-size:.9rem;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:6px 14px;border-radius:999px;cursor:pointer}.filters button[aria-pressed="true"]{background:var(--accent);color:var(--bg);border-color:var(--accent)}
+#creatures{border-bottom:none;padding-bottom:0}
 </style>
 </head>
 <body>
@@ -260,12 +260,50 @@ ${t.feats.map(([h, p]) => `<div class="feature"><h3>${h}</h3><p>${p}</p></div>`)
 <section id="install"><h2>${t.install}</h2><ol class="steps">
 ${t.steps.map((s) => `<li>${s}</li>`).join('\n')}
 </ol></section>
+<section id="creatures"><h2>${t.byHabitat}</h2>${filters}</section>
 ${sections}
 <section><h2>${t.plants}</h2><div class="minis">${PLANTS.map((p) => small(`plant_${p.id}.png`, name(lang, p.id, p.name), info(lang, p.id, p.info))).join('')}${TREES.map((tr) => small(`tree_${tr.id}.png`, name(lang, tr.id, tr.name), info(lang, tr.id, tr.info))).join('')}</div></section>
 <section><h2>${t.park}</h2><div class="vehicles">${VEHICLES.map((v) => `<article class="card"><img loading="lazy" src="${img(`${v.id}.png`)}" alt="${esc(name(lang, v.id, v.name))}" width="320" height="320"><div><h3>${esc(name(lang, v.id, v.name))}</h3><p>${esc(info(lang, v.id, v.info))}</p></div></article>`).join('')}</div>
 <div class="minis" style="margin-top:14px">${small('fence.png', t.fence[0], t.fence[1])}${small('generator.png', t.generator[0], t.generator[1])}${small('item_amber_mosquito.png', t.amber[0], t.amber[1])}${small('item_field_guide.png', t.guide[0], t.guide[1])}${small('gear_electric_prod.png', t.prod[0], t.prod[1])}${small('gear_tranquilizer_rifle.png', t.rifle[0], t.rifle[1])}</div></section>
 </main>
 <footer class="wrap">${t.footer} <a href="https://github.com/${REPO}">${t.sourceCode}</a> · ${t.licence}.</footer>
+<script>
+// Reload when a newer release has been published (latest.json is rewritten by every Pages deploy).
+(() => {
+  const built = ${JSON.stringify(VERSION || '')};
+  const url = '${lang === 'en' ? '' : '../'}latest.json';
+  async function check() {
+    try {
+      const res = await fetch(url + '?t=' + Date.now(), { cache: 'no-store' });
+      if (!res.ok) return;
+      const { version } = await res.json();
+      if (!version || version === built) return;
+      // reload once per new version (a cached copy must not cause a reload loop)
+      let seen = null;
+      try { seen = sessionStorage.getItem('dino-reloaded-for'); sessionStorage.setItem('dino-reloaded-for', version); } catch { /* storage blocked */ }
+      if (seen !== version) location.reload();
+    } catch {
+      /* offline or blocked: try again later */
+    }
+  }
+  check();
+  setInterval(check, 5 * 60 * 1000);
+  document.addEventListener('visibilitychange', () => document.visibilityState === 'visible' && check());
+})();
+document.querySelectorAll('.filters button').forEach((b) => b.addEventListener('click', () => {
+  document.querySelectorAll('.filters button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+  const f = b.dataset.filter;
+  document.querySelectorAll('section[data-habitat]').forEach((sec) => {
+    let shown = 0;
+    sec.querySelectorAll('.card').forEach((c) => {
+      const on = f === 'all' || f === sec.dataset.habitat || (f === 'ride' && c.dataset.ride);
+      c.hidden = !on;
+      if (on) shown++;
+    });
+    sec.hidden = shown === 0;
+  });
+}));
+</script>
 </body>
 </html>
 `;

@@ -4,6 +4,7 @@ import path from 'node:path';
 import esbuild from 'esbuild';
 import type { Assembled } from '../../creatures/assemble.js';
 import { PLANTS, TREES } from '../../data/plants.js';
+import { HABITATS, habitatOf, livesIn } from '../../data/habitats.js';
 import { toGeoJson } from '../../model/geo.js';
 import type { OutDir } from '../writer.js';
 import { buildBlocks, fenceGeometry } from './blocks.js';
@@ -154,7 +155,10 @@ export async function emitWorld({ bp, rp, lang, assembled }: WorldCtx) {
       tame: x.def.tame === 'egg' ? 'egg' : x.def.tame ? 'feed' : 'no',
       ride: x.def.ride?.mode ?? null,
       seats: x.def.ride?.seats ?? 0,
+      habitat: habitatOf(x.def),
+      livesIn: livesIn(x.def),
     })),
+    habitats: HABITATS.map((h) => h.id),
     structures,
     plants: PLANTS.map((p) => ({ id: p.id, name: p.name, info: p.info })),
     trees: TREES.map((t) => ({ id: t.id, name: t.name, info: t.info })),

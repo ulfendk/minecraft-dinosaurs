@@ -13,7 +13,10 @@ export interface GuideData {
     tame: 'egg' | 'feed' | 'no';
     ride: 'ground' | 'fly' | 'swim' | null;
     seats: number;
+    habitat: string;
+    livesIn: string[];
   }[];
+  habitats: string[];
   structures: Record<string, { name: string; size: [number, number, number]; base: [number, number, number] }[]>;
   plants: { id: string; name: string; info: string }[];
   trees: { id: string; name: string; info: string }[];

@@ -37,6 +37,15 @@ describe('content', () => {
     for (const id of ['sarcosuchus', 'megalodon', 'pteranodon', 'pterodactylus', 'quetzalcoatlus', 'mosasaurus', 'plesiosaurus', 'titanoboa']) expect(CREATURES.some((c) => c.id === id)).toBe(true);
   });
 
+  it('puts every creature in a habitat and lists where it lives', async () => {
+    const { HABITATS, habitatOf, livesIn } = await import('../src/data/habitats.js');
+    for (const c of CREATURES) {
+      expect(HABITATS.map((h) => h.id), c.id).toContain(habitatOf(c));
+      expect(livesIn(c).length, c.id).toBeGreaterThan(0);
+    }
+    for (const h of HABITATS) expect(CREATURES.some((c) => habitatOf(c) === h.id), h.id).toBe(true);
+  });
+
   it('has tameable and rideable creatures on land, in the air and in water', () => {
     expect(CREATURES.filter((c) => c.tame).length).toBeGreaterThan(30);
     for (const mode of ['ground', 'fly', 'swim']) expect(CREATURES.some((c) => c.ride?.mode === mode)).toBe(true);
