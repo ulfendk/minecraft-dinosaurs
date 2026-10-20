@@ -97,6 +97,14 @@ const T = {
       'Your first time in the world, you get a <b>Dino Field Guide</b>.',
       `<b>Java Edition:</b> install <a href="https://fabricmc.net/use/">Fabric Loader</a> for Minecraft 26.3, plus <a href="https://modrinth.com/mod/fabric-api">Fabric API</a> and <a href="https://modrinth.com/mod/geckolib">GeckoLib</a>. Then put <a href="${javaJar}"><code>prehistoric-dinosaurs-fabric-${VERSION || '&lt;version&gt;'}+26.3.jar</code></a> in your <code>mods</code> folder. The Prehistoric Jungle biome is Bedrock-only; on Java, the plants and creatures appear in vanilla biomes.`,
     ],
+    upgrade: 'Upgrading to a new version',
+    upSteps: [
+      '<b>Download the new version</b> and open the file. A newer version replaces the one you have, and your worlds use it the next time you load them.',
+      '<b>Still running the old version?</b> (or Minecraft says it is already installed): go to <i>Settings → Storage</i>, delete Prehistoric Dinosaurs under both <i>Resource Packs</i> and <i>Behavior Packs</i>, then open the new file again.',
+      '<b>Check the world:</b> in the world\'s <i>Edit</i> screen, under <i>Behavior Packs</i> and <i>Resource Packs</i>, make sure Prehistoric Dinosaurs is active. A world you imported or downloaded can carry its own old copy: deactivate it there, save, and activate the new one.',
+    ],
+    upServer: 'On a server, replace the add-on\'s folders in <code>behavior_packs</code> and <code>resource_packs</code> with the new ones and restart it.',
+    upJava: '<b>Java Edition:</b> delete the old Prehistoric Dinosaurs jar from your <code>mods</code> folder and put the new one in its place. Keep only one version in the folder. If the new version needs a newer Fabric API or GeckoLib, update those too.',
     tameEgg: 'Tame from egg',
     livesIn: 'Lives in:',
     byHabitat: 'Creatures by habitat',
@@ -151,6 +159,14 @@ const T = {
       'Første gang du er i verdenen, får du en <b>Dino Field Guide</b> (felthåndbog).',
       `<b>Java Edition:</b> installér <a href="https://fabricmc.net/use/">Fabric Loader</a> til Minecraft 26.3 samt <a href="https://modrinth.com/mod/fabric-api">Fabric API</a> og <a href="https://modrinth.com/mod/geckolib">GeckoLib</a>. Læg derefter <a href="${javaJar}"><code>prehistoric-dinosaurs-fabric-${VERSION || '&lt;version&gt;'}+26.3.jar</code></a> i din <code>mods</code>-mappe. Det forhistoriske junglebiom findes kun på Bedrock; på Java dukker planterne og dyrene op i de almindelige biomer.`,
     ],
+    upgrade: 'Opdatering til en ny version',
+    upSteps: [
+      '<b>Hent den nye version</b>, og åbn filen. En nyere version erstatter den, du har, og dine verdener bruger den, næste gang du åbner dem.',
+      '<b>Kører den gamle version stadig?</b> (eller siger Minecraft, at den allerede er installeret): Gå til <i>Indstillinger → Lagerplads</i>, slet Forhistoriske Dinosaurer (<i>Prehistoric Dinosaurs</i>) under både <i>Ressourcepakker</i> og <i>Adfærdspakker</i>, og åbn så den nye fil igen.',
+      '<b>Tjek verdenen:</b> Sørg for, at Forhistoriske Dinosaurer er slået til under <i>Adfærdspakker</i> og <i>Ressourcepakker</i>, når du redigerer verdenen. En verden, du har importeret eller hentet, kan have sin egen gamle kopi med: Slå den fra dér, gem, og slå den nye til.',
+    ],
+    upServer: 'På en server skal du erstatte tilføjelsens mapper i <code>behavior_packs</code> og <code>resource_packs</code> med de nye og genstarte den.',
+    upJava: '<b>Java Edition:</b> Slet den gamle Forhistoriske Dinosaurer-jar fra din <code>mods</code>-mappe, og læg den nye i stedet. Hav kun én version i mappen. Kræver den nye version en nyere Fabric API eller GeckoLib, så opdatér dem også.',
     tameEgg: 'Tæmmes fra æg',
     livesIn: 'Lever i:',
     byHabitat: 'Dyrene efter levested',
@@ -262,6 +278,9 @@ ${t.feats.map(([h, p]) => `<div class="feature"><h3>${h}</h3><p>${p}</p></div>`)
 <section id="install"><h2>${t.install}</h2><ol class="steps">
 ${t.steps.map((s) => `<li>${s}</li>`).join('\n')}
 </ol></section>
+<section id="upgrade"><h2>${t.upgrade}</h2><ol class="steps">
+${t.upSteps.map((s) => `<li>${s}</li>`).join('\n')}
+</ol><p>${t.upServer}</p><p>${t.upJava}</p></section>
 <section id="creatures"><h2>${t.byHabitat}</h2>${filters}</section>
 ${sections}
 <section><h2>${t.plants}</h2><div class="minis">${PLANTS.map((p) => small(`plant_${p.id}.png`, name(lang, p.id, p.name), info(lang, p.id, p.info))).join('')}${TREES.map((tr) => small(`tree_${tr.id}.png`, name(lang, tr.id, tr.name), info(lang, tr.id, tr.info))).join('')}</div></section>
