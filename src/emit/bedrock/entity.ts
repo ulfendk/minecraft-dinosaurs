@@ -294,15 +294,105 @@ export function behaviorEntity(c: CreatureDef, ctx: EntityCtx): J {
     }
   }
 
+  const properties: J = { 'dino:sedated': { type: 'bool', default: false, client_sync: true } };
+  huntingHooks(c, ctx, comp, g, events, properties, babyScale);
+
   return {
     format_version: FORMAT.entity,
     'minecraft:entity': {
-      description: { identifier: id, properties: { 'dino:sedated': { type: 'bool', default: false, client_sync: true } }, spawn_category: swimmer ? 'water_creature' : c.temperament === 'aggressive' ? 'monster' : 'creature', is_spawnable: true, is_summonable: true },
+      description: { identifier: id, properties, spawn_category: swimmer ? 'water_creature' : c.temperament === 'aggressive' ? 'monster' : 'creature', is_spawnable: true, is_summonable: true },
       component_groups: g,
       components: comp,
       events,
     },
   };
+}
+
+/** Realistic Hunting states, set by the hunting add-on's scripts (see src/hunting.ts). */
+const HUNT = { calm: 0, alert: 1, flee: 2, wounded: 3, carcass: 4 };
+
+/**
+ * Realistic Hunting hooks. Nothing here does anything on its own: when the hunting add-on is
+ * installed, its scripts set dino:hunt_state (spooked creatures run from hunters) and fire
+ * dino:hunt_carcass when one is brought down. A carcass loses everything a living creature
+ * does (AI and navigation, which live in the dino:hunt_alive group), lies still, can't be hurt
+ * and rots away after 20 minutes unless it's field dressed with a knife.
+ */
+function huntingHooks(c: CreatureDef, ctx: EntityCtx, comp: J, g: Record<string, J>, events: J, properties: J, babyScale: number) {
+  const state = 'dino:hunt_state';
+  const stateIs = (operator: string, value: number) => ({ test: 'int_property', subject: 'self', domain: state, operator, value });
+  properties[state] = { type: 'int', range: [0, 4], default: 0, client_sync: true };
+  comp['minecraft:type_family'].family.push('hunting_target');
+
+  // Spooked or wounded: run from hunters, their dogs and the place a shot came from.
+  const avoid = comp['minecraft:behavior.avoid_mob_type'] ?? { priority: 1, entity_types: [] };
+  avoid.priority = 1;
+  avoid.remove_target = true;
+  avoid.entity_types.push({
+    filters: { all_of: [{ any_of: [isFamily('player'), isFamily('hunting_scare'), isFamily('hunting_dog')] }, stateIs('>=', HUNT.flee), stateIs('<=', HUNT.wounded)] },
+    max_dist: 96,
+    walk_speed_multiplier: 1.6,
+    sprint_speed_multiplier: 1.8,
+  });
+  comp['minecraft:behavior.avoid_mob_type'] = avoid;
+
+  const alive: J = {};
+  for (const key of Object.keys(comp)) {
+    if (/^minecraft:(behavior\.|navigation\.|ambient_sound_interval|healable)/.test(key)) {
+      alive[key] = comp[key];
+      delete comp[key];
+    }
+  }
+  g['dino:hunt_alive'] = alive;
+  // Gives creatures from before this version their dino:hunt_alive group.
+  const navigation = Object.keys(alive).find((k) => k.startsWith('minecraft:navigation.'));
+  if (navigation) {
+    comp['minecraft:environment_sensor'] = {
+      triggers: [{ filters: { all_of: [stateIs('!=', HUNT.carcass), { test: 'has_component', subject: 'self', operator: '!=', value: navigation }] }, event: 'dino:hunt_revive' }],
+    };
+  }
+  const water = c.habitat === 'water';
+  g['dino:hunt_carcass'] = {
+    // The hunting add-on field dresses on interaction with a knife; this just shows the button.
+    'minecraft:interact': { interactions: [{ on_interact: { event: 'dino:hunt_field_dress', target: 'self' }, swing: true, interact_text: 'action.interact.hunting.field_dress' }] },
+    'minecraft:timer': { looping: false, time: 1200, time_down_event: { event: 'dino:hunt_rot', target: 'self' } },
+    'minecraft:collision_box': { width: ctx.hitbox.width, height: ctx.hitbox.height },
+    ...(water ? {
+      'minecraft:buoyant': { base_buoyancy: 1.0, apply_gravity: true, liquid_blocks: ['minecraft:water', 'minecraft:flowing_water'] },
+      'minecraft:breathable': { total_supply: 15, suffocate_time: 0, breathes_air: true, breathes_water: true },
+    } : {}),
+  };
+  // A young creature stays small when it's a carcass.
+  g['dino:hunt_young'] = {
+    'minecraft:is_baby': {},
+    'minecraft:scale': { value: babyScale },
+    'minecraft:collision_box': { width: round(Math.max(0.3, ctx.hitbox.width * babyScale)), height: round(Math.max(0.3, ctx.hitbox.height * babyScale)) },
+  };
+  g['dino:hunt_despawn'] = { 'minecraft:instant_despawn': {} };
+  g['dino:hunt_lured'] = {
+    'minecraft:behavior.nearest_attackable_target': {
+      priority: 2, must_see: false, reselect_targets: true, within_radius: 80,
+      entity_types: [{ filters: isFamily('hunting_lure'), max_dist: 80 }],
+    },
+    'minecraft:behavior.move_towards_target': { priority: 2, speed_multiplier: 1.0, within_radius: 80 },
+  };
+
+  for (const e of ['dino:spawn_adult', 'dino:spawn_baby', 'minecraft:entity_born']) events[e].add.component_groups.unshift('dino:hunt_alive');
+  const life = Object.keys(g).filter((k) => !['dino:hunt_carcass', 'dino:hunt_young', 'dino:hunt_despawn'].includes(k));
+  events['dino:hunt_carcass'] = {
+    sequence: [
+      { filters: { test: 'is_baby', subject: 'self', value: true }, add: { component_groups: ['dino:hunt_young'] } },
+      { remove: { component_groups: life }, add: { component_groups: ['dino:hunt_carcass'] }, set_property: { [state]: HUNT.carcass, 'dino:sedated': false } },
+    ],
+  };
+  events['dino:hunt_revive'] = { add: { component_groups: ['dino:hunt_alive'] } };
+  events['dino:hunt_field_dress'] = {};
+  events['dino:hunt_rot'] = { add: { component_groups: ['dino:hunt_despawn'] } };
+  events['dino:hunt_lure'] = { add: { component_groups: ['dino:hunt_lured'] } };
+  events['dino:hunt_unlure'] = { remove: { component_groups: ['dino:hunt_lured'] } };
+  const ds = comp['minecraft:damage_sensor'];
+  const old = ds ? (Array.isArray(ds.triggers) ? ds.triggers : [ds.triggers]) : [];
+  comp['minecraft:damage_sensor'] = { triggers: [{ on_damage: { filters: stateIs('==', HUNT.carcass) }, deals_damage: 'no' }, ...old] };
 }
 
 function seatList(n: number, ctx: EntityCtx) {

@@ -12,6 +12,8 @@ import { toGeoJson } from './model/geo.js';
 import { danishLang, guideLang } from './data/i18n/game.js';
 import { PLANTS, TREES } from './data/plants.js';
 import { clean, OutDir } from './emit/writer.js';
+import { huntingProfile } from './hunting.js';
+import { checkProfile } from '../tools/vendor/hunting-kit/check.mjs';
 
 export const BUILD = path.resolve('build');
 export const BP_DIR = path.join(BUILD, 'dinosaurs_BP');
@@ -44,8 +46,13 @@ export async function build(opts: { quiet?: boolean } = {}) {
   bp.json('loot_tables/entities/dino_saddle.json', SADDLE_LOOT);
   rp.json('render_controllers/dino.render_controllers.json', renderControllers());
 
+  // Realistic Hunting target profiles: every creature's hit model must give a perfect broadside heart shot.
+  const hunting = assembled.map((x) => huntingProfile(x));
+  const failures = hunting.flatMap((p) => checkProfile(p).failures as string[]);
+  if (failures.length) throw new Error(`Hunting profiles (npx tsx tools/check-hunting.ts):\n  ${failures.join('\n  ')}`);
+
   // items, blocks, world generation, scripts, vehicles…
-  await emitWorld({ bp, rp, lang, sounds, assembled });
+  await emitWorld({ bp, rp, lang, sounds, assembled, hunting });
 
   bp.copy('pack_icon.png', path.resolve('packs/static/pack_icon.png'));
   rp.copy('pack_icon.png', path.resolve('packs/static/pack_icon.png'));

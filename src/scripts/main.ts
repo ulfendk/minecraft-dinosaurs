@@ -6,9 +6,12 @@
 import { Block, Dimension, EntityDamageCause, GameMode, ItemStack, Player, system, world, type Entity, type RawMessage, type Vector3 } from '@minecraft/server';
 import { ActionFormData, MessageFormData } from '@minecraft/server-ui';
 import type { GuideData } from './data.js';
+import { isCarcass, setupHunting } from './hunting.js';
 
 declare const __DINO_DATA__: GuideData;
 const DATA = __DINO_DATA__;
+
+setupHunting();
 
 const NS = 'dino';
 const FENCE = `${NS}:electric_fence`;
@@ -283,6 +286,7 @@ function wearHeld(player: Player, amount = 1) {
 world.afterEvents.entityHitEntity.subscribe(({ damagingEntity, hitEntity }) => {
   if (!(damagingEntity instanceof Player) || !hitEntity.isValid) return;
   if (heldItem(damagingEntity)?.typeId !== `${NS}:electric_prod`) return;
+  if (isCarcass(hitEntity)) return;
   const big = hitEntity.matches({ families: [BIG] });
   try {
     hitEntity.applyDamage(big ? 3 : 5, { cause: EntityDamageCause.lightning, damagingEntity });
@@ -304,6 +308,7 @@ world.afterEvents.entityHitEntity.subscribe(({ damagingEntity, hitEntity }) => {
 const doseNeeded = (e: Entity) => (e.matches({ families: [BIG] }) ? (e.matches({ families: ['carnivore'] }) ? 4 : 3) : 1);
 
 function sedate(e: Entity, shooter?: Entity) {
+  if (isCarcass(e)) return;
   const now = system.currentTick;
   const last = (e.getDynamicProperty('dino:dose_tick') as number | undefined) ?? 0;
   const dose = (now - last > 600 ? 0 : ((e.getDynamicProperty('dino:dose') as number | undefined) ?? 0)) + 1;

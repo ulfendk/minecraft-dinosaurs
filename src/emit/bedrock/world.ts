@@ -17,6 +17,8 @@ import { emitWorldgen } from './worldgen.js';
 import { DART_ENTITY, GEAR_ICONS, GEAR_ITEMS, dartAssets } from './gear.js';
 
 export interface WorldCtx {
+  /** Realistic Hunting target profiles (src/hunting.ts), sent by the scripts. */
+  hunting?: unknown[];
   bp: OutDir;
   rp: OutDir;
   lang: string[];
@@ -44,7 +46,7 @@ const smelt = (id: string, input: string, output: string) => ({
   'minecraft:recipe_furnace': { description: { identifier: `${NS}:${id}` }, tags: ['furnace', 'smoker', 'campfire', 'soul_campfire'], input, output },
 });
 
-export async function emitWorld({ bp, rp, lang, assembled }: WorldCtx) {
+export async function emitWorld({ bp, rp, lang, assembled, hunting }: WorldCtx) {
   const terrain: Record<string, { textures: string }> = {};
   const itemTex: Record<string, { textures: string }> = {};
   const blockSounds: Record<string, unknown> = { format_version: [1, 1, 0] };
@@ -170,7 +172,7 @@ export async function emitWorld({ bp, rp, lang, assembled }: WorldCtx) {
     target: 'es2022',
     platform: 'neutral',
     external: ['@minecraft/server', '@minecraft/server-ui'],
-    define: { __DINO_DATA__: JSON.stringify(data) },
+    define: { __DINO_DATA__: JSON.stringify(data), __DINO_HUNTING__: JSON.stringify(hunting ?? []) },
     write: false,
     legalComments: 'none',
   });

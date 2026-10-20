@@ -77,6 +77,9 @@ import java.util.Set;
  */
 public class DinoEntity extends TamableAnimal implements GeoEntity {
 	private static final EntityDataAccessor<Boolean> SEDATED = SynchedEntityData.defineId(DinoEntity.class, EntityDataSerializers.BOOLEAN);
+	private static final EntityDataAccessor<Boolean> CARCASS = SynchedEntityData.defineId(DinoEntity.class, EntityDataSerializers.BOOLEAN);
+	/** Entity tag Realistic Hunting puts on a creature it has brought down (see {@link #isCarcass()}). */
+	public static final String HUNTING_CARCASS = "hunting.carcass";
 	private static final Set<String> VANILLA_PREY_SMALL = Set.of("chicken", "rabbit", "sheep", "pig");
 	private static final Set<String> VANILLA_PREY_BIG = Set.of("cow", "pig", "sheep", "chicken", "rabbit", "goat", "llama", "horse", "donkey", "camel");
 	private static final Set<String> VANILLA_FISH = Set.of("cod", "salmon", "tropical_fish", "pufferfish", "squid");
@@ -211,6 +214,12 @@ public class DinoEntity extends TamableAnimal implements GeoEntity {
 	protected void defineSynchedData(SynchedEntityData.Builder builder) {
 		super.defineSynchedData(builder);
 		builder.define(SEDATED, false);
+		builder.define(CARCASS, false);
+	}
+
+	/** A Realistic Hunting carcass: lies on its side until it's field dressed (synced from the tag). */
+	public boolean isCarcass() {
+		return this.entityData.get(CARCASS);
 	}
 
 	public boolean isSedated() {
@@ -219,6 +228,7 @@ public class DinoEntity extends TamableAnimal implements GeoEntity {
 
 	/** One tranquilizer dart. Big animals need several doses; returns true when knocked out. */
 	public boolean addSedativeDose() {
+		if (isCarcass()) return false;
 		long now = this.level().getGameTime();
 		if (now - lastDoseTick > 600) sedativeDose = 0;
 		lastDoseTick = now;
@@ -263,7 +273,7 @@ public class DinoEntity extends TamableAnimal implements GeoEntity {
 			this.getNavigation().stop();
 		}
 		// adults occasionally lay an egg
-		if (spec.lays && !this.isBaby() && !this.isVehicle() && --eggTimer <= 0 && this.level() instanceof ServerLevel server) {
+		if (spec.lays && !isCarcass() && !this.isBaby() && !this.isVehicle() && --eggTimer <= 0 && this.level() instanceof ServerLevel server) {
 			eggTimer = 24000 + this.random.nextInt(24000);
 			var egg = ModItems.egg(spec.id);
 			if (egg != null) {
@@ -276,6 +286,7 @@ public class DinoEntity extends TamableAnimal implements GeoEntity {
 	@Override
 	public void tick() {
 		super.tick();
+		if (!this.level().isClientSide()) this.entityData.set(CARCASS, this.entityTags().contains(HUNTING_CARCASS));
 		if (this.level().isClientSide()) {
 			float dx = (float) (this.getX() - this.xo), dz = (float) (this.getZ() - this.zo);
 			walkedDistance += Mth.sqrt(dx * dx + dz * dz) / Math.max(0.2F, this.getScale());

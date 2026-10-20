@@ -10,6 +10,7 @@ import type { AnimSet } from '../../anim/anims.js';
 /** Bedrock query/variable → GeckoLib expression. */
 const QUERY_MAP: [RegExp, string][] = [
   [/query\.property\(\s*'dino:sedated'\s*\)/g, 'variable.dino_sedated'],
+  [/query\.property\(\s*'dino:hunt_state'\s*\)/g, 'variable.dino_hunt_state'],
   [/query\.modified_move_speed/g, 'variable.dino_speed'],
   [/query\.modified_distance_moved/g, 'variable.dino_dist'],
   [/query\.target_x_rotation/g, 'variable.dino_pitch'],
@@ -18,7 +19,7 @@ const QUERY_MAP: [RegExp, string][] = [
   [/variable\.attack_time/g, 'variable.dino_attack'],
 ];
 
-export const JAVA_VARIABLES = ['variable.dino_sedated', 'variable.dino_speed', 'variable.dino_dist', 'variable.dino_pitch', 'variable.dino_yaw', 'variable.dino_sit', 'variable.dino_attack'];
+export const JAVA_VARIABLES = ['variable.dino_sedated', 'variable.dino_hunt_state', 'variable.dino_speed', 'variable.dino_dist', 'variable.dino_pitch', 'variable.dino_yaw', 'variable.dino_sit', 'variable.dino_attack'];
 
 function mapQueries(e: string) {
   for (const [re, to] of QUERY_MAP) e = e.replace(re, to);

@@ -43,7 +43,9 @@ public class TranqDartEntity extends ThrowableItemProjectile {
 		Entity target = hitResult.getEntity();
 		target.hurtServer(level, this.damageSources().thrown(this, this.getOwner()), 1.0F);
 		Player shooter = this.getOwner() instanceof Player p ? p : null;
-		if (target instanceof DinoEntity dino) {
+		if (target instanceof DinoEntity dino && dino.isCarcass()) {
+			return; // nothing left to sedate
+		} else if (target instanceof DinoEntity dino) {
 			boolean out = dino.addSedativeDose();
 			if (shooter != null) {
 				shooter.sendOverlayMessage(out

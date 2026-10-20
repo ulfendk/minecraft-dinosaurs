@@ -13,6 +13,7 @@ import { lootTable } from '../bedrock/creatureFiles.js';
 import { seatPositions } from '../bedrock/entity.js';
 import { GEAR_ICONS } from '../bedrock/gear.js';
 import { mergedAnimation } from './anim.js';
+import { huntingProfile } from '../../hunting.js';
 import { BIOME_LABELS, HABITATS, habitatOf, livesIn } from '../../data/habitats.js';
 import { eggModel, eggTexture } from '../bedrock/eggs.js';
 
@@ -124,6 +125,17 @@ export async function buildJavaResources(opts: { quiet?: boolean } = {}) {
     da[`${MOD}.info.${id}`] = DA_INFO[id] ?? x.def.info;
   }
   out.json(`${MOD}/creatures.json`, assembled.map(creatureSpec));
+  // Realistic Hunting picks these up from every mod's hunting/targets/ (see src/hunting.ts). The
+  // renderer scales the model (the entity's own scale stays 1), so the hit model scales by modelScale.
+  out.json(`hunting/targets/${MOD}.json`, assembled.map((x) => {
+    const { bedrock, entry, ...p } = huntingProfile(x, { ns: MOD, name: `entity.${MOD}.${x.def.id}` });
+    return {
+      ...p,
+      modelScale: x.def.scale,
+      sounds: { warn: javaSound(x.def.sounds.ambient), death: javaSound(x.def.sounds.death), pitch: p.sounds.pitch },
+      loot: p.loot.map((l) => ({ ...l, item: javaItem(l.item) })),
+    };
+  }));
 
   // ---- placed eggs (one model, a texture per species)
   out.json(`assets/${MOD}/geckolib/models/entity/egg.geo.json`, toGeoJson(eggModel('egg'), `geometry.${MOD}.egg`));

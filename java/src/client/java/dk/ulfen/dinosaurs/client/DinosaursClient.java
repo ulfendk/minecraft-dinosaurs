@@ -25,6 +25,7 @@ public class DinosaursClient implements ClientModInitializer {
 		MolangQueries.<Object>setActorVariable("variable.dino_yaw", a -> a.animatable() instanceof DinoEntity d ? Mth.wrapDegrees(Mth.rotLerp(a.partialTick(), d.yHeadRotO, d.yHeadRot) - Mth.rotLerp(a.partialTick(), d.yBodyRotO, d.yBodyRot)) : 0);
 		MolangQueries.<Object>setActorVariable("variable.dino_sit", a -> a.animatable() instanceof DinoEntity d && d.isInSittingPose() ? 1 : 0);
 		MolangQueries.<Object>setActorVariable("variable.dino_sedated", a -> a.animatable() instanceof DinoEntity d && d.isSedated() ? 1 : 0);
+		MolangQueries.<Object>setActorVariable("variable.dino_hunt_state", a -> a.animatable() instanceof DinoEntity d && d.isCarcass() ? 4 : 0);
 		MolangQueries.<Object>setActorVariable("variable.dino_attack", a -> a.animatable() instanceof DinoEntity d ? d.getSwingAnimation(a.partialTick()) : 0);
 	}
 }

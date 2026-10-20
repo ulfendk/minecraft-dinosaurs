@@ -46,6 +46,15 @@ Every creature belongs to one habitat. Its field guide entry and website card al
 - **Electric prod:** hit a creature to shock it. The shock stuns, slows and pushes it back.
 - **Tranquilizer rifle:** shoots tranquilizer darts, which are crafted from 4 arrows and a fermented spider eye. One dart knocks out a small animal for 45 seconds. Big herbivores need 3 darts and big carnivores 4. A knocked-out creature lies down.
 
+### Realistic Hunting
+
+Install [Realistic Hunting](https://github.com/ulfendk/minecraft-hunting) (0.3.0 or later) as well, and every creature is game, on Bedrock and Java:
+- Each creature has organs placed in its own model: the heart sits behind the shoulder of the big quadrupeds, where the leg doesn't cover it.
+- Each has a weight estimated from its length and body plan, a minimum calibre and a trophy. A broadside heart shot is perfect; the biggest sauropods and predators need a .338.
+- Spooked and wounded creatures flee from hunters. A downed creature lies on its side as a carcass until it's field dressed for meat and hide, or it rots away.
+
+`src/hunting.ts` builds the profiles, and the build fails if any creature's broadside heart shot isn't perfect (`npx tsx tools/check-hunting.ts -v` shows each check). `tools/vendor/hunting-kit/` is copied from Realistic Hunting by `node tools/sync-hunting-kit.mjs`.
+
 ### Electric fences
 
 Fences connect like vanilla fences and are 1.5 blocks tall, so creatures can't step over them. A **fence generator** touching the fence powers the whole connected network; toggle it by right-clicking or with redstone. Powered fences shock anything that touches them. Big carnivores smash through fences that have no power.

@@ -159,6 +159,18 @@ export function buildAnimations(id: string, rig: Rig, scale: number): AnimSet {
 
   // babies get a relatively bigger head
   add('baby', { [rig.head]: { scale: 1.35 } }, 'query.is_baby');
+
+  // Realistic Hunting carcass: lying on its side, everything else still (src/hunting.ts).
+  const dead = "query.property('dino:hunt_state') == 4";
+  for (let i = 0; i < animate.length; i++) {
+    const entry = animate[i];
+    if (typeof entry === 'string') animate[i] = entry === 'baby' ? entry : { [entry]: `!(${dead})` };
+    else {
+      const [name, cond] = Object.entries(entry)[0];
+      if (name !== 'baby') animate[i] = { [name]: `(${cond}) && !(${dead})` };
+    }
+  }
+  add('dead', { root: { rotation: [0, 0, 90], position: [0, r(rig.a.bodyW / 2 + 1), 0] } }, dead);
   return { pre, animations: anims, animate };
 }
 

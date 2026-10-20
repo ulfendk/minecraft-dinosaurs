@@ -86,6 +86,7 @@ const T = {
       ['Park gear', 'Electric fences shock anything that touches them once a generator powers them, and big carnivores smash through fences with no power. Drive a safari truck, a tour car or a gyrosphere, and keep animals in check with an electric prod or a tranquilizer rifle.'],
       ['Fossils and amber', 'Mine fossil blocks and amber ore, and look for the rare mosquito in amber.'],
       ['Field guide', 'An in-game book with facts about every species and how to tame and ride it.'],
+      ['Realistic Hunting', 'Install Realistic Hunting as well and every creature is game, with organs in its own model, a shot report and a trophy. A T. rex takes a .338.'],
     ],
     install: 'Install on iPad, phone, console or Windows (Bedrock)',
     steps: [
@@ -139,6 +140,7 @@ const T = {
       ['Parkudstyr', 'Elektriske hegn giver stød til alt, der rører dem, når en generator forsyner dem med strøm, og store kødædere smadrer hegn uden strøm. Kør i safarivogn, turbil eller gyrosfære, og hold dyrene i skak med en elektrisk stav eller et bedøvelsesgevær.'],
       ['Fossiler og rav', 'Bryd fossilblokke og ravmalm, og led efter den sjældne myg i rav.'],
       ['Felthåndbog', 'En bog i spillet med fakta om alle arter, og hvordan du tæmmer og rider på dem.'],
+      ['Realistisk jagt', 'Installér også Realistisk jagt, så er alle dyr vildt med organer i deres egen model, skudrapport og trofæ. En T. rex kræver en .338.'],
     ],
     install: 'Installation på iPad, telefon, konsol eller Windows (Bedrock)',
     steps: [
